@@ -7,17 +7,17 @@
    ========================================================================== */
 
 :root{
-    --ls-bg:            #070B13;
-    --ls-panel:         #0E1524;
-    --ls-panel-2:       #121A2C;
-    --ls-border:        #1E2A42;
-    --ls-border-soft:   #16203590;
+    --ls-bg:            #FFFFFF;
+    --ls-panel:         #FFFFFF;
+    --ls-panel-2:       #F1F3F7;
+    --ls-border:        #E2E6EE;
+    --ls-border-soft:   #E2E6EE90;
 
-    --ls-text:          #E8ECF6;
-    --ls-text-muted:    #8A94AC;
-    --ls-text-dim:      #5C6883;
+    --ls-text:          #0B0E14;
+    --ls-text-muted:    #59626F;
+    --ls-text-dim:      #8A94AC;
 
-    --ls-accent:        #19D3C5;   /* cian: sistema activo / seguro */
+    --ls-accent:        #19D3C5;
     --ls-accent-dim:    #19D3C520;
 
     --ls-risk-bajo:     #33D17A;
@@ -41,8 +41,8 @@ html, body{
 body{
     background: var(--ls-bg);
     background-image:
-        radial-gradient(circle at 15% 0%, #0D1B2A 0%, transparent 45%),
-        radial-gradient(circle at 100% 30%, #10182B 0%, transparent 40%);
+        radial-gradient(circle at 15% 0%, #EAF7F6 0%, transparent 45%),
+        radial-gradient(circle at 100% 30%, #EEF1F8 0%, transparent 40%);
     background-attachment: fixed;
     color: var(--ls-text);
     font-family: var(--font-body);
@@ -64,7 +64,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     position: fixed;
     top: 0; left: 0; bottom: 0;
     width: var(--ls-sidebar-w);
-    background: linear-gradient(180deg, #0A1120 0%, #070B13 100%);
+    background: linear-gradient(180deg, #F7F9FC 0%, #FFFFFF 100%);
     border-right: 1px solid var(--ls-border);
     padding: 1.5rem 1.1rem;
     z-index: 20;
@@ -127,7 +127,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .ls-nav .nav-link.active{
     background: var(--ls-accent-dim);
-    color: var(--ls-accent);
+    color: #0E7C74;
     border-color: #19D3C540;
 }
 .ls-nav .nav-link.active i{ color: var(--ls-accent); }
@@ -173,7 +173,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     border-bottom: 1px solid var(--ls-border);
     position: sticky;
     top: 0;
-    background: #070B13EE;
+    background: #FFFFFFEE;
     backdrop-filter: blur(6px);
     z-index: 10;
 }
@@ -207,7 +207,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     gap: .45rem;
     transition: filter .15s ease, transform .1s ease;
 }
-.ls-btn-accent:hover{ filter: brightness(1.1); color: #06110F; }
+.ls-btn-accent:hover{ filter: brightness(1.06); color: #06110F; }
 .ls-btn-accent:active{ transform: translateY(1px); }
 
 .ls-btn-ghost{
@@ -222,7 +222,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     align-items: center;
     gap: .45rem;
 }
-.ls-btn-ghost:hover{ color: var(--ls-text); border-color: #3A4867; }
+.ls-btn-ghost:hover{ color: var(--ls-text); border-color: #C7CEDB; }
 
 .ls-btn-filter{
     background: transparent;
@@ -236,7 +236,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .ls-btn-filter.active{
     background: var(--ls-accent-dim);
     border-color: #19D3C560;
-    color: var(--ls-accent);
+    color: #0E7C74;
 }
 
 /* ============ TARJETAS ============ */
@@ -245,6 +245,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     border: 1px solid var(--ls-border);
     border-radius: 14px;
     overflow: hidden;
+    box-shadow: 0 1px 3px #0B0E1408;
 }
 
 .ls-card-header{
@@ -277,7 +278,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .ls-kpi-icon{
     font-size: 1.1rem;
-    opacity: .85;
+    opacity: .9;
     margin-bottom: .5rem;
 }
 
@@ -294,9 +295,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     margin-top: .35rem;
 }
 
-.text-info-emphasis{ color: var(--ls-accent) !important; }
+.text-info-emphasis{ color: #0E9E92 !important; }
 .text-danger-emphasis{ color: var(--ls-risk-critico) !important; }
-.text-warning-emphasis{ color: var(--ls-risk-medio) !important; }
+.text-warning-emphasis{ color: #B8862A !important; }
 .text-success-emphasis{ color: var(--ls-risk-bajo) !important; }
 
 /* ============ FORMULARIO ============ */
@@ -323,13 +324,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .ls-form .form-control:focus,
 .ls-form .form-select:focus{
-    background: var(--ls-panel-2);
+    background: #FFFFFF;
     color: var(--ls-text);
     border-color: var(--ls-accent);
     box-shadow: 0 0 0 3px #19D3C525;
 }
 
-.ls-form .form-select option{ background: var(--ls-panel-2); }
+.ls-form .form-select option{ background: #FFFFFF; }
 
 /* ============ RESULTADO / VEREDICTO ============ */
 .ls-resultado-empty{
@@ -372,6 +373,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     font-weight: 700;
     font-size: 2rem;
     line-height: 1;
+    color: var(--ls-text);
 }
 .ls-score-value small{
     font-size: .75rem;
@@ -431,7 +433,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .ls-factor-bar{
     height: 5px;
     border-radius: 3px;
-    background: #1B2740;
+    background: #E2E6EE;
     overflow: hidden;
 }
 .ls-factor-bar > span{
@@ -469,7 +471,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     border-bottom: 1px solid var(--ls-border-soft);
     vertical-align: middle;
 }
-.ls-table tbody tr:hover{ background: #101A2C; }
+.ls-table tbody tr:hover{ background: #F7F9FC; }
 .ls-table tbody tr.ls-row-new{
     animation: ls-row-in .6s ease;
 }
@@ -506,11 +508,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     gap: .3rem;
 }
 
-/* Colores de nivel de riesgo, reutilizados en badges, anillos y barras */
-.ls-nivel-bajo     { color: var(--ls-risk-bajo);     background: #33D17A1F; }
-.ls-nivel-medio    { color: var(--ls-risk-medio);    background: #F2C2451F; }
-.ls-nivel-alto     { color: var(--ls-risk-alto);     background: #FF91421F; }
-.ls-nivel-critico  { color: var(--ls-risk-critico);  background: #FF4D5E1F; }
+/* Colores de nivel de riesgo (originales), reutilizados en badges, anillos y barras */
+.ls-nivel-bajo     { color: #1E9E5C;     background: #33D17A22; }
+.ls-nivel-medio    { color: #A8791E;    background: #F2C24522; }
+.ls-nivel-alto     { color: #C96420;     background: #FF914222; }
+.ls-nivel-critico  { color: #D42C40;  background: #FF4D5E22; }
 
 /* ============ MOTOR DE REGLAS (grid explicativo) ============ */
 .ls-reglas-grid{ padding: 1.25rem; }
@@ -527,7 +529,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     font-family: var(--font-mono);
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--ls-accent);
+    color: #0E9E92;
 }
 
 .ls-regla-titulo{
@@ -561,7 +563,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     border-radius: 10px;
     padding: .85rem 1rem;
     font-size: .8rem;
-    box-shadow: 0 10px 30px #00000060;
+    box-shadow: 0 10px 30px #0B0E1420;
     animation: ls-toast-in .35s ease;
 }
 @keyframes ls-toast-in{
@@ -591,4 +593,50 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* Respeta preferencia de reducción de movimiento */
 @media (prefers-reduced-motion: reduce){
     .ls-pulse, .ls-row-new, .ls-toast, .ls-score-ring{ animation: none !important; transition: none !important; }
+}
+
+/* ============ LOGIN ============ */
+.ls-login-wrap{
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.ls-login-card{
+    width: 100%;
+    max-width: 380px;
+}
+
+.ls-login-brand{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .6rem;
+    padding: 2rem 1.5rem 1rem;
+    text-align: center;
+}
+
+.ls-login-brand .ls-brand-name{ font-size: 1.15rem; margin-top: .1rem; }
+
+.ls-login-error{
+    background: #FF4D5E15;
+    border: 1px solid #FF4D5E40;
+    color: #D42C40;
+    font-size: .8rem;
+    padding: .6rem .8rem;
+    border-radius: 8px;
+    margin: 0 1.25rem 1rem;
+    display: none;
+    align-items: center;
+    gap: .4rem;
+}
+.ls-login-error.show{ display: flex; }
+
+.ls-login-hint{
+    text-align: center;
+    font-size: .72rem;
+    color: var(--ls-text-dim);
+    padding: 0 1.25rem 1.5rem;
 }
