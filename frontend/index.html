@@ -3,20 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="img/logo.ico" type="image/ico">
+    <title>Lambda Shield · Detección de Fraude Bancario</title>
 
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
-    <title>Lambda</title>
+    <!-- Tipografías -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- Estilos propios -->
+    <link href="styles.css" rel="stylesheet">
 </head>
 <body>
 
-    <h1>TITULO</h1>
-    <h2>Sub titulo</h2>
-    <button class="btn">Boton de Prueba</button>
-    <button class="btn btn-primary">Boton de Prueba 2</button>
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="ls-sidebar d-flex flex-column">
+        <div class="ls-brand">
+            <span class="ls-brand-mark"><i class="bi bi-shield-lock-fill"></i></span>
+            <div>
+                <div class="ls-brand-name">Lambda Shield</div>
+                <div class="ls-brand-sub">Motor antifraude</div>
+            </div>
+        </div>
 
+        <nav class="nav flex-column ls-nav">
+            <a class="nav-link active" href="#panel"><i class="bi bi-grid-1x2-fill"></i> Panel general</a>
+            <a class="nav-link" href="#simulador"><i class="bi bi-sliders"></i> Simular transacción</a>
+            <a class="nav-link" href="#feed"><i class="bi bi-list-check"></i> Transacciones</a>
+            <a class="nav-link" href="#reglas"><i class="bi bi-diagram-3-fill"></i> Motor de reglas</a>
+        </nav>
 
+        <div class="ls-sidebar-footer">
+            <div class="ls-engine-status">
+                <span class="ls-pulse"></span>
+                Motor activo · evaluando en tiempo real
+            </div>
+        </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <main class="ls-main">
+
+        <!-- Topbar -->
+        <header class="ls-topbar d-flex align-items-center justify-content-between">
+            <div>
+                <h1 class="ls-page-title mb-0" id="panel">Panel general</h1>
+                <p class="ls-page-sub mb-0">Monitoreo continuo de operaciones · Cuenta demo #AR-40521</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn ls-btn-ghost" id="btnReset">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reiniciar demo
+                </button>
+                <button class="btn ls-btn-accent" id="btnAuto">
+                    <i class="bi bi-lightning-charge-fill"></i> Generar tráfico automático
+                </button>
+            </div>
+        </header>
+
+        <div class="ls-content">
+
+            <!-- ===== KPIs ===== -->
+            <section class="row g-3 ls-kpis">
+                <div class="col-6 col-xl-3">
+                    <div class="ls-card ls-kpi">
+                        <div class="ls-kpi-icon text-info-emphasis"><i class="bi bi-activity"></i></div>
+                        <div class="ls-kpi-value" id="kpiTotal">0</div>
+                        <div class="ls-kpi-label">Transacciones evaluadas</div>
+                    </div>
+                </div>
+                <div class="col-6 col-xl-3">
+                    <div class="ls-card ls-kpi">
+                        <div class="ls-kpi-icon text-danger-emphasis"><i class="bi bi-exclamation-octagon-fill"></i></div>
+                        <div class="ls-kpi-value" id="kpiCritical">0</div>
+                        <div class="ls-kpi-label">Bloqueadas (riesgo crítico)</div>
+                    </div>
+                </div>
+                <div class="col-6 col-xl-3">
+                    <div class="ls-card ls-kpi">
+                        <div class="ls-kpi-icon text-warning-emphasis"><i class="bi bi-flag-fill"></i></div>
+                        <div class="ls-kpi-value" id="kpiReview">0</div>
+                        <div class="ls-kpi-label">En revisión manual</div>
+                    </div>
+                </div>
+                <div class="col-6 col-xl-3">
+                    <div class="ls-card ls-kpi">
+                        <div class="ls-kpi-icon text-success-emphasis"><i class="bi bi-patch-check-fill"></i></div>
+                        <div class="ls-kpi-value" id="kpiScore">0.0</div>
+                        <div class="ls-kpi-label">Score de riesgo promedio</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="row g-3 mt-1">
+                <!-- ===== SIMULADOR ===== -->
+                <section class="col-xl-5" id="simulador">
+                    <div class="ls-card h-100">
+                        <div class="ls-card-header">
+                            <i class="bi bi-sliders"></i> Simular transacción
+                            <span class="ls-card-header-hint">el motor la evalúa al instante</span>
+                        </div>
+
+                        <form id="formTransaccion" class="ls-form" novalidate>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Titular</label>
+                                    <select class="form-select" id="txCliente">
+                                        <option value="C-001" data-avg="180">María Fernández · promedio S/ 180</option>
+                                        <option value="C-002" data-avg="950">Jorge Salas · promedio S/ 950</option>
+                                        <option value="C-003" data-avg="60">Ana Quiroz · promedio S/ 60</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-6">
+                                    <label class="form-label">Monto (S/)</label>
+                                    <input type="number" class="form-control" id="txMonto" value="150" min="1" step="0.01" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Categoría de comercio</label>
+                                    <select class="form-select" id="txCategoria">
+                                        <option value="retail">Retail / supermercado</option>
+                                        <option value="restaurante">Restaurante</option>
+                                        <option value="servicios">Servicios / suscripciones</option>
+                                        <option value="electronica">Electrónica</option>
+                                        <option value="casino">Casino / apuestas</option>
+                                        <option value="cripto">Exchange de criptomonedas</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-6">
+                                    <label class="form-label">Hora de la operación</label>
+                                    <input type="time" class="form-control" id="txHora" value="14:30">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">País / ubicación</label>
+                                    <select class="form-select" id="txPais">
+                                        <option value="local">Perú (habitual)</option>
+                                        <option value="regional">Colombia / Chile / Ecuador</option>
+                                        <option value="alto_riesgo">Jurisdicción de alto riesgo</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-6">
+                                    <label class="form-label">Dispositivo</label>
+                                    <select class="form-select" id="txDispositivo">
+                                        <option value="reconocido">Reconocido / habitual</option>
+                                        <option value="nuevo">Nuevo, sin historial</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Operaciones en la última hora</label>
+                                    <input type="number" class="form-control" id="txVelocidad" value="1" min="1" max="20">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn ls-btn-accent w-100 mt-4">
+                                <i class="bi bi-cpu"></i> Evaluar con el motor antifraude
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- ===== RESULTADO / RADAR ===== -->
+                <section class="col-xl-7">
+                    <div class="ls-card h-100" id="resultadoCard">
+                        <div class="ls-card-header">
+                            <i class="bi bi-radar"></i> Veredicto del motor
+                            <span class="ls-card-header-hint">desglose por factor de riesgo</span>
+                        </div>
+
+                        <div class="ls-resultado-empty" id="resultadoEmpty">
+                            <i class="bi bi-shield-check"></i>
+                            <p>Completa el simulador para ver el score de riesgo y su desglose.</p>
+                        </div>
+
+                        <div class="ls-resultado-body d-none" id="resultadoBody">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-5 text-center">
+                                    <div class="ls-score-ring" id="scoreRing">
+                                        <div class="ls-score-value">
+                                            <span id="scoreNumero">0</span>
+                                            <small>/ 100</small>
+                                        </div>
+                                    </div>
+                                    <div class="ls-badge-nivel mt-3" id="badgeNivel">—</div>
+                                    <div class="ls-veredicto-texto" id="veredictoTexto"></div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div id="radarWrap"></div>
+                                </div>
+                            </div>
+
+                            <hr class="ls-hr">
+
+                            <div class="ls-factores" id="listaFactores"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ===== FEED DE TRANSACCIONES ===== -->
+            <section class="mt-3" id="feed">
+                <div class="ls-card">
+                    <div class="ls-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span><i class="bi bi-list-check"></i> Transacciones recientes</span>
+                        <div class="d-flex gap-2 ls-filtros" role="group">
+                            <button class="btn ls-btn-filter active" data-filtro="todas">Todas</button>
+                            <button class="btn ls-btn-filter" data-filtro="critico">Críticas</button>
+                            <button class="btn ls-btn-filter" data-filtro="alto">Alto</button>
+                            <button class="btn ls-btn-filter" data-filtro="medio">Medio</button>
+                            <button class="btn ls-btn-filter" data-filtro="bajo">Bajo</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table ls-table mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Titular</th>
+                                    <th>Monto</th>
+                                    <th>Comercio</th>
+                                    <th>Ubicación</th>
+                                    <th>Hora</th>
+                                    <th>Score</th>
+                                    <th>Nivel</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaTransacciones">
+                                <tr class="ls-empty-row">
+                                    <td colspan="9">Aún no hay transacciones evaluadas. Usa el simulador o genera tráfico automático.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== MOTOR DE REGLAS ===== -->
+            <section class="mt-3 mb-4" id="reglas">
+                <div class="ls-card">
+                    <div class="ls-card-header">
+                        <i class="bi bi-diagram-3-fill"></i> Cómo calcula el riesgo el motor
+                        <span class="ls-card-header-hint">6 factores ponderados, score de 0 a 100</span>
+                    </div>
+                    <div class="row g-3 ls-reglas-grid" id="reglasGrid"></div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Toast de alerta -->
+    <div class="ls-toast-container position-fixed" id="toastContainer"></div>
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+    <!-- Lógica del motor antifraude -->
+    <script src="fraudEngine.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
