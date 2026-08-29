@@ -1,4 +1,18 @@
+/**
+ * ==========================================================================
+ * LAMBDA SHIELD · app.js
+ * --------------------------------------------------------------------------
+ * Capa de interfaz: toma la lógica pura de fraudEngine.js y la conecta
+ * con el DOM (formulario, tabla de transacciones, KPIs, radar SVG, toasts).
+ * ==========================================================================
+ */
 
+(() => {
+    'use strict';
+
+    /* ---------------------------------------------------------
+       Estado de la aplicación (todo vive en memoria: es una demo)
+       --------------------------------------------------------- */
     const state = {
         engine: new FraudEngine(),
         transacciones: [],   // historial evaluado, más reciente primero
@@ -84,6 +98,9 @@
         };
     }
 
+    /* ---------------------------------------------------------
+       Evaluación de una transacción + actualización de toda la UI
+       --------------------------------------------------------- */
     function evaluarYRegistrar(tx) {
         const ctx = { promedioCliente: promedioDeCliente(tx.cliente) };
         const veredicto = state.engine.evaluate(tx, ctx);
@@ -106,7 +123,9 @@
         return registro;
     }
 
-
+    /* ---------------------------------------------------------
+       Panel "Veredicto del motor" (anillo + radar + factores)
+       --------------------------------------------------------- */
     function pintarResultadoPrincipal(registro) {
         resultadoEmpty.classList.add('d-none');
         resultadoBody.classList.remove('d-none');
@@ -148,7 +167,11 @@
         return 'var(--ls-risk-bajo)';
     }
 
-
+    /* ---------------------------------------------------------
+       Radar SVG (elemento distintivo del panel):
+       un eje por factor, la distancia del centro = % de riesgo
+       consumido en ese factor.
+       --------------------------------------------------------- */
     function construirRadarSVG(factores) {
         const size = 240;
         const center = size / 2;
@@ -197,7 +220,9 @@
         </svg>`;
     }
 
-
+    /* ---------------------------------------------------------
+       Tabla de transacciones
+       --------------------------------------------------------- */
     function pintarFilaTabla(registro, esNueva) {
         const emptyRow = tablaBody.querySelector('.ls-empty-row');
         if (emptyRow) emptyRow.remove();
@@ -235,7 +260,9 @@
         });
     }
 
- 
+    /* ---------------------------------------------------------
+       KPIs agregados
+       --------------------------------------------------------- */
     function actualizarKPIs() {
         const total = state.transacciones.length;
         const criticas = state.transacciones.filter(r => r.veredicto.nivel === 'critico').length;
@@ -250,7 +277,9 @@
         kpiScore.textContent = promedio.toFixed(1);
     }
 
-
+    /* ---------------------------------------------------------
+       Alertas toast para transacciones críticas
+       --------------------------------------------------------- */
     function lanzarToast(registro) {
         const div = document.createElement('div');
         div.className = 'ls-toast';
@@ -266,7 +295,9 @@
         }, 5000);
     }
 
-
+    /* ---------------------------------------------------------
+       Generador de tráfico automático (simula el "mundo real")
+       --------------------------------------------------------- */
     function transaccionAleatoria() {
         const clientes = ['C-001', 'C-002', 'C-003'];
         const categorias = ['retail', 'restaurante', 'servicios', 'electronica', 'casino', 'cripto'];
@@ -314,6 +345,9 @@
         btn.classList.add('ls-btn-ghost');
     }
 
+    /* ---------------------------------------------------------
+       Panel educativo: "cómo calcula el riesgo el motor"
+       --------------------------------------------------------- */
     function pintarPanelReglas() {
         const definiciones = [
             { peso: '25', titulo: 'Monto inusual', desc: 'Compara el monto contra el gasto promedio histórico del titular. Desviaciones grandes suman más puntos.' },
@@ -335,7 +369,9 @@
         `).join('');
     }
 
-
+    /* ---------------------------------------------------------
+       Reset de la demo
+       --------------------------------------------------------- */
     function reiniciarDemo() {
         if (state.autoIntervalId) alternarTraficoAutomatico();
         state.transacciones = [];
@@ -346,7 +382,9 @@
         actualizarKPIs();
     }
 
-
+    /* ---------------------------------------------------------
+       Eventos
+       --------------------------------------------------------- */
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         evaluarYRegistrar(leerTransaccionDelFormulario());
@@ -364,7 +402,9 @@
     $('#btnAuto').addEventListener('click', alternarTraficoAutomatico);
     $('#btnReset').addEventListener('click', reiniciarDemo);
 
-
+    /* ---------------------------------------------------------
+       Arranque
+       --------------------------------------------------------- */
     pintarPanelReglas();
     actualizarKPIs();
 

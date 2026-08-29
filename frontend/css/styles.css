@@ -1,4 +1,11 @@
-/* CSS personalizado sobre Bootstrap. */
+/* ==========================================================================
+   LAMBDA SHIELD — Sistema de Detección de Fraude Bancario
+   Identidad: consola de seguridad financiera. Fondo casi-negro azulado,
+   datos en monoespaciada (como un ticker de operaciones), acento cian
+   para "seguro/activo" y rojo para alerta. Nada de gradientes decorativos:
+   cada color comunica un estado de riesgo real.
+   ========================================================================== */
+
 :root{
     --ls-bg:            #070B13;
     --ls-panel:         #0E1524;
