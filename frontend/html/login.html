@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión · Lambda Shield</title>
+
+    <!-- Script de autenticación -->
+    <script src="../js/verificacion.js"></script>
+    <script>
+        // Si ya hay sesión activa, redirigir al panel general (index.html)
+        if (sessionStorage.getItem(CLAVE_AUTENTICACION_BL) === 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
+
+    <!-- Bootstrap, Iconos y Estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="../css/estilos.css" rel="stylesheet">
+</head>
+<body class="d-flex align-items-center justify-content-center vh-100">
+
+    <div class="tarjeta-ls p-4 shadow" style="max-width: 380px; width: 100%; border-top: 4px solid var(--rojo-acento);">
+        
+        <div class="text-center mb-4">
+            <i class="bi bi-shield-lock-fill fs-1" style="color: var(--rojo-acento);"></i>
+            <h3 class="fw-bold text-white mt-2 mb-0">Lambda Shield</h3>
+            <p class="text-secondary small text-uppercase" style="letter-spacing: 0.05em;">Acceso al motor antifraude</p>
+        </div>
+
+        <!-- Caja de error oculta por defecto -->
+        <div class="alert alert-danger d-none d-flex align-items-center gap-2 py-2 fs-6" style="background-color: var(--rojo-tenue); border-color: var(--riesgo-critico); color: var(--riesgo-critico);" id="errorLogin">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span style="font-size: 0.85rem;">Usuario o contraseña incorrectos.</span>
+        </div>
+
+        <form id="formAcceso" novalidate>
+            <div class="mb-3">
+                <label class="form-label">Usuario</label>
+                <input type="text" class="form-control" id="usuario" autocomplete="username" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="clave" autocomplete="current-password" required>
+            </div>
+
+            <button type="submit" class="btn btn-principal w-100 py-2">
+                <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--borde) !important;">
+            <p class="text-secondary small mb-0">Demo usuario: <strong class="text-white">admin</strong> clave: <strong class="text-white">lambda2026</strong></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('formAcceso').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const usuario = document.getElementById('usuario').value.trim();
+            const clave = document.getElementById('clave').value;
+            const cajaError = document.getElementById('errorLogin');
+
+            // Llamada a la función del archivo verificacion.js
+            if (blIniciarSesion(usuario, clave)) {
+                sessionStorage.setItem(CLAVE_AUTENTICACION_BL, 'true');
+                window.location.replace('index.html');
+            } else {
+                cajaError.classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

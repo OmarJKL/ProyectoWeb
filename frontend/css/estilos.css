@@ -1,0 +1,209 @@
+/* ==========================================================================
+   LAMBDA SHIELD — Estilos Principales
+   Identidad: Modo oscuro, paleta rojo y negro.
+   Se apoya en Bootstrap para la estructura, pero define los detalles finos,
+   componentes interactivos y la ambientación visual del motor.
+   ========================================================================== */
+:root {
+    --fondo-principal: #050505;
+    --fondo-tarjeta: #121212;
+    --fondo-input: #1a1a1a;
+    --borde-oscuro: #2a2a2a;
+    
+    --utp-rojo: #D9001B;
+    --utp-rojo-brillo: rgba(217, 0, 27, 0.2);
+    
+    --texto-principal: #ffffff;
+    --texto-secundario: #a0a0a0;
+
+    --riesgo-bajo: #10b981;
+    --riesgo-medio: #f59e0b;
+    --riesgo-alto: #f97316;
+    --riesgo-critico: #ef4444;
+
+    --fuente-titulos: system-ui, -apple-system, sans-serif;
+    --fuente-datos: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+body {
+    background-color: var(--fondo-principal) ;
+    color: var(--texto-principal) ;
+    font-family: var(--fuente-titulos);
+}
+
+/* ============ BARRA DE NAVEGACIÓN ============ */
+.navbar-utp {
+    background-color: var(--fondo-principal) ;
+    border-bottom: 1px solid var(--borde-oscuro);
+}
+.navbar-utp .navbar-brand { 
+    color: var(--texto-principal) ; 
+    font-size: 1.5rem;
+}
+.navbar-utp .nav-link { color: var(--texto-secundario) }
+.navbar-utp .nav-link:hover, .navbar-utp .nav-link.active { color: var(--utp-rojo) ; }
+
+/* ============ TARJETAS (Estilo de la imagen de referencia) ============ */
+.tarjeta-ls, .card {
+    background-color: var(--fondo-tarjeta) ;
+    border: 1px solid var(--borde-oscuro) ;
+    /* El borde superior rojo característico de la imagen */
+    border-top: 2px solid var(--utp-rojo) ;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.cabecera-tarjeta {
+    padding: 1.25rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--texto-principal);
+    border-bottom: 1px solid var(--borde-oscuro);
+}
+
+.subtitulo-tarjeta {
+    font-weight: normal;
+    font-size: 0.8rem;
+    color: var(--texto-secundario);
+    display: block;
+    margin-top: 0.2rem;
+}
+
+/* ============ FORMULARIOS E INPUTS ============ */
+.form-label {
+    color: var(--texto-principal);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.form-control, .form-select {
+    background-color: var(--fondo-input) ;
+    border: 1px solid var(--borde-oscuro) ;
+    color: var(--texto-principal) ;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--utp-rojo) ;
+    box-shadow: 0 0 0 0.25rem var(--utp-rojo-brillo) ;
+}
+
+/* ============ BOTONES ============ */
+.btn-principal {
+    background-color: var(--utp-rojo) ;
+    color: #ffffff ;
+    border: none;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+}
+.btn-principal:hover { filter: brightness(1.2); }
+
+.btn-secundario {
+    background-color: transparent ;
+    color: var(--texto-secundario) ;
+    border: 1px solid var(--borde-oscuro) ;
+    border-radius: 8px;
+}
+.btn-secundario:hover { 
+    color: var(--texto-principal) ; 
+    border-color: var(--texto-secundario) ; 
+}
+
+/* ============ TABLA DEL HISTORIAL (Corrección de visibilidad) ============ */
+.table {
+    color: var(--texto-principal) ;
+    margin-bottom: 0;
+}
+.table th {
+    background-color: var(--fondo-input);
+    color: var(--texto-secundario);
+    border-bottom: 1px solid var(--borde-oscuro);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 1rem;
+}
+.table td {
+    background-color: transparent ;
+    border-bottom: 1px solid var(--borde-oscuro) ;
+    color: var(--texto-principal) ;
+    padding: 1rem;
+    vertical-align: middle;
+}
+.table tbody tr:hover td {
+    background-color: var(--fondo-input) ;
+}
+
+/* ============ COMPONENTES DEL SIMULADOR ============ */
+.anillo-puntaje {
+    --p: 0deg; 
+    --c: var(--riesgo-bajo);
+    width: 150px; 
+    height: 150px;
+    border-radius: 50%; 
+    margin: 0 auto;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: conic-gradient(var(--c) var(--p), var(--fondo-input) var(--p));
+    position: relative;
+}
+.anillo-puntaje::before {
+    content: ""; 
+    position: absolute; 
+    inset: 12px;
+    border-radius: 50%; 
+    background: var(--fondo-tarjeta);
+}
+.valor-puntaje { 
+    position: relative; 
+    z-index: 1; 
+    font-weight: bold; 
+    font-size: 2.2rem; 
+    font-family: var(--fuente-datos); 
+}
+
+.etiqueta-nivel {
+    display: inline-block; 
+    padding: 0.3rem 1rem;
+    border-radius: 999px; 
+    font-weight: bold; 
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.item-factor { 
+    background: var(--fondo-input); 
+    border: 1px solid var(--borde-oscuro); 
+    border-radius: 8px; 
+    padding: 1rem; 
+}
+.barra-factor { 
+    height: 6px; 
+    background: var(--fondo-principal); 
+    border-radius: 3px; 
+    margin: 0.6rem 0; 
+    overflow: hidden; 
+}
+.barra-factor span { display: block; height: 100%; }
+
+.dato-mono { font-family: var(--fuente-datos); }
+
+/* ============ KPIs ============ */
+.kpi-ls {
+    background-color: var(--fondo-tarjeta);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--borde-oscuro);
+    border-left: 4px solid var(--borde-oscuro);
+}
+.kpi-ls.activo { border-left-color: var(--utp-rojo); }
+.kpi-ls.critico { border-left-color: var(--riesgo-critico); }
+.kpi-valor { font-family: var(--fuente-datos); font-size: 2rem; font-weight: bold; }
+.kpi-etiqueta { font-size: 0.8rem; color: var(--texto-secundario); margin-top: 0.5rem; }
+
+/* ============ ALERTAS ============ */
+.contenedor-alertas { bottom: 1.5rem; right: 1.5rem; z-index: 1080; display: flex; flex-direction: column; gap: 0.6rem; }
+.alerta-ls { background: var(--fondo-input); border: 1px solid var(--riesgo-critico); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--riesgo-critico); }
