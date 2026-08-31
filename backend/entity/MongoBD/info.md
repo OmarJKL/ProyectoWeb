@@ -1,4 +1,4 @@
-en el zip estan las colecciones 
+estan las colecciones 
 hay index id basicos
 faltan los indexes nuevos
 

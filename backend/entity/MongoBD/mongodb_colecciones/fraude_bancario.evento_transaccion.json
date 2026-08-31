@@ -1,0 +1,18 @@
+[{
+  "_id": {
+    "$oid": "6a911fa0c0b5cf8bb984c6cd"
+  },
+  "eventId": "EVT-20260828-001",
+  "codigoTransaction": "TRX-20260128-001",
+  "tipoEvento": "RECEPCION",
+  "timestamp": {
+    "$date": "2026-08-28T10:30:00.000Z"
+  },
+  "payload": {
+    "monto": 1500.5,
+    "moneda": "USD",
+    "cuentaOrigen": "123456789",
+    "beneficiario": "Juan Perez"
+  },
+  "source": "APP_MOVIL"
+}]

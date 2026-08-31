@@ -1,0 +1,25 @@
+[{
+  "_id": {
+    "$oid": "6a911fd6c0b5cf8bb984c6d0"
+  },
+  "deviceFingerprint": "fp_abc123def456",
+  "clienteRef": "CLI-7890",
+  "headers": {
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "accept-language": "es-ES,es;q=0.9"
+  },
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  "señales": {
+    "screenResolution": "1920x1080",
+    "timezone": "America/Lima",
+    "language": "es"
+  },
+  "geo": {
+    "ip": "190.123.45.67",
+    "pais": "PE",
+    "ciudad": "Lima"
+  },
+  "timestamp": {
+    "$date": "2026-08-28T10:30:00.000Z"
+  }
+}]

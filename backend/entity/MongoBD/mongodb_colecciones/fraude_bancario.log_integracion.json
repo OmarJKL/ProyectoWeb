@@ -1,0 +1,22 @@
+[{
+  "_id": {
+    "$oid": "6a91201bc0b5cf8bb984c6d7"
+  },
+  "correlationId": "CORR-20260128-001",
+  "endpoint": "/api/v1/transaccion/validar",
+  "sistemaOrigen": "SISTEMA_CORE",
+  "requestMetadata": {
+    "method": "POST",
+    "contentType": "application/json",
+    "size": 245
+  },
+  "responseMetadata": {
+    "statusCode": 200,
+    "size": 128
+  },
+  "status": "SUCCESS",
+  "elapsedMs": 345,
+  "timestamp": {
+    "$date": "2026-08-28T10:30:00.000Z"
+  }
+}]
