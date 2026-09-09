@@ -1,56 +1,64 @@
-/* ==========================================================================
-   LAMBDA SHIELD — Estilos Principales
-   Identidad: Modo oscuro, paleta rojo y negro.
-   Se apoya en Bootstrap para la estructura, pero define los detalles finos,
-   componentes interactivos y la ambientación visual del motor.
-   ========================================================================== */
 :root {
-    --fondo-principal: #050505;
-    --fondo-tarjeta: #121212;
-    --fondo-input: #1a1a1a;
-    --borde-oscuro: #2a2a2a;
-    
-    --utp-rojo: #D9001B;
-    --utp-rojo-brillo: rgba(217, 0, 27, 0.2);
-    
-    --texto-principal: #ffffff;
-    --texto-secundario: #a0a0a0;
+    /* ---- Superficies (antes: tema oscuro -> ahora: tema claro Lambda) ---- */
+    --fondo-principal: #f7f7f5;
+    --fondo-tarjeta:   #ffffff;
+    --fondo-input:     #f7f7f5;
+    --borde-oscuro:    #e4e2df;
+    --borde:           var(--borde-oscuro); /* alias: algunas páginas usaban var(--borde) sin definirla */
 
-    --riesgo-bajo: #10b981;
-    --riesgo-medio: #f59e0b;
-    --riesgo-alto: #f97316;
-    --riesgo-critico: #ef4444;
+    /* ---- Marca (paleta Lambda: negro / blanco / rojo) ---- */
+    --utp-rojo:        #c8102e;
+    --utp-rojo-oscuro: #9c0c23;
+    --utp-rojo-brillo: rgba(200, 16, 46, 0.14);
+    --rojo-acento:     var(--utp-rojo);       /* alias: login.html usaba var(--rojo-acento) sin definirla */
+    --rojo-tenue:      rgba(200, 16, 46, 0.08); /* alias: login.html usaba var(--rojo-tenue) sin definirla */
 
-    --fuente-titulos: system-ui, -apple-system, sans-serif;
-    --fuente-datos: 'JetBrains Mono', ui-monospace, monospace;
+    --texto-principal: #111111;
+    --texto-secundario:#6b6b6b;
+
+    /* ---- Niveles de riesgo (se mantienen semánticos, ajustados a fondo claro) ---- */
+    --riesgo-bajo:     #146c2e;
+    --riesgo-medio:    #b45309;
+    --riesgo-alto:     #c2410c;
+    --riesgo-critico:  var(--utp-rojo-oscuro);
+
+    --fuente-titulos: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
+    --fuente-datos:   'JetBrains Mono', ui-monospace, monospace;
 }
 
 body {
-    background-color: var(--fondo-principal) ;
-    color: var(--texto-principal) ;
+    background-color: var(--fondo-principal);
+    color: var(--texto-principal);
+    font-family: "Inter", var(--fuente-titulos);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
     font-family: var(--fuente-titulos);
+    letter-spacing: -0.01em;
+}
+
+::selection {
+    background: var(--utp-rojo);
+    color: #ffffff;
 }
 
 /* ============ BARRA DE NAVEGACIÓN ============ */
 .navbar-utp {
-    background-color: var(--fondo-principal) ;
+    background-color: var(--fondo-tarjeta);
     border-bottom: 1px solid var(--borde-oscuro);
 }
-.navbar-utp .navbar-brand { 
-    color: var(--texto-principal) ; 
-    font-size: 1.5rem;
-}
-.navbar-utp .nav-link { color: var(--texto-secundario) }
-.navbar-utp .nav-link:hover, .navbar-utp .nav-link.active { color: var(--utp-rojo) ; }
+.navbar-utp .navbar-brand { color: var(--texto-principal); font-size: 1.5rem; }
+.navbar-utp .nav-link { color: var(--texto-secundario); }
+.navbar-utp .nav-link:hover, .navbar-utp .nav-link.active { color: var(--utp-rojo); }
 
-/* ============ TARJETAS (Estilo de la imagen de referencia) ============ */
+/* ============ TARJETAS ============ */
 .tarjeta-ls, .card {
-    background-color: var(--fondo-tarjeta) ;
-    border: 1px solid var(--borde-oscuro) ;
-    /* El borde superior rojo característico de la imagen */
-    border-top: 2px solid var(--utp-rojo) ;
+    background-color: var(--fondo-tarjeta);
+    border: 1px solid var(--borde-oscuro);
+    border-top: 2px solid var(--utp-rojo);
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 15px rgba(17, 17, 17, 0.05);
     overflow: hidden;
 }
 
@@ -78,43 +86,44 @@ body {
 }
 
 .form-control, .form-select {
-    background-color: var(--fondo-input) ;
-    border: 1px solid var(--borde-oscuro) ;
-    color: var(--texto-principal) ;
+    background-color: var(--fondo-input);
+    border: 1px solid var(--borde-oscuro);
+    color: var(--texto-principal);
     border-radius: 8px;
     padding: 0.6rem 1rem;
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: var(--utp-rojo) ;
-    box-shadow: 0 0 0 0.25rem var(--utp-rojo-brillo) ;
+    border-color: var(--utp-rojo);
+    box-shadow: 0 0 0 0.25rem var(--utp-rojo-brillo);
 }
 
 /* ============ BOTONES ============ */
 .btn-principal {
-    background-color: var(--utp-rojo) ;
-    color: #ffffff ;
+    background-color: var(--utp-rojo);
+    color: #ffffff;
     border: none;
     font-weight: 600;
     border-radius: 8px;
     padding: 0.6rem 1.2rem;
 }
-.btn-principal:hover { filter: brightness(1.2); }
+.btn-principal:hover { filter: brightness(1.1); background-color: var(--utp-rojo-oscuro); color: #ffffff; }
 
 .btn-secundario {
-    background-color: transparent ;
-    color: var(--texto-secundario) ;
-    border: 1px solid var(--borde-oscuro) ;
+    background-color: transparent;
+    color: var(--texto-secundario);
+    border: 1px solid var(--borde-oscuro);
     border-radius: 8px;
 }
-.btn-secundario:hover { 
-    color: var(--texto-principal) ; 
-    border-color: var(--texto-secundario) ; 
+.btn-secundario:hover {
+    color: var(--texto-principal);
+    border-color: var(--texto-principal);
+    background-color: var(--fondo-input);
 }
 
-/* ============ TABLA DEL HISTORIAL (Corrección de visibilidad) ============ */
+/* ============ TABLA DEL HISTORIAL ============ */
 .table {
-    color: var(--texto-principal) ;
+    color: var(--texto-principal);
     margin-bottom: 0;
 }
 .table th {
@@ -126,66 +135,66 @@ body {
     padding: 1rem;
 }
 .table td {
-    background-color: transparent ;
-    border-bottom: 1px solid var(--borde-oscuro) ;
-    color: var(--texto-principal) ;
+    background-color: transparent;
+    border-bottom: 1px solid var(--borde-oscuro);
+    color: var(--texto-principal);
     padding: 1rem;
     vertical-align: middle;
 }
 .table tbody tr:hover td {
-    background-color: var(--fondo-input) ;
+    background-color: var(--fondo-input);
 }
 
-/* ============ COMPONENTES DEL SIMULADOR ============ */
+/* ============ COMPONENTES DEL SIMULADOR (radar / anillo de puntaje) ============ */
 .anillo-puntaje {
-    --p: 0deg; 
+    --p: 0deg;
     --c: var(--riesgo-bajo);
-    width: 150px; 
+    width: 150px;
     height: 150px;
-    border-radius: 50%; 
+    border-radius: 50%;
     margin: 0 auto;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
     justify-content: center;
     background: conic-gradient(var(--c) var(--p), var(--fondo-input) var(--p));
     position: relative;
 }
 .anillo-puntaje::before {
-    content: ""; 
-    position: absolute; 
+    content: "";
+    position: absolute;
     inset: 12px;
-    border-radius: 50%; 
+    border-radius: 50%;
     background: var(--fondo-tarjeta);
 }
-.valor-puntaje { 
-    position: relative; 
-    z-index: 1; 
-    font-weight: bold; 
-    font-size: 2.2rem; 
-    font-family: var(--fuente-datos); 
+.valor-puntaje {
+    position: relative;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 2.2rem;
+    font-family: var(--fuente-datos);
 }
 
 .etiqueta-nivel {
-    display: inline-block; 
+    display: inline-block;
     padding: 0.3rem 1rem;
-    border-radius: 999px; 
-    font-weight: bold; 
+    border-radius: 999px;
+    font-weight: bold;
     font-size: 0.8rem;
     text-transform: uppercase;
 }
 
-.item-factor { 
-    background: var(--fondo-input); 
-    border: 1px solid var(--borde-oscuro); 
-    border-radius: 8px; 
-    padding: 1rem; 
+.item-factor {
+    background: var(--fondo-input);
+    border: 1px solid var(--borde-oscuro);
+    border-radius: 8px;
+    padding: 1rem;
 }
-.barra-factor { 
-    height: 6px; 
-    background: var(--fondo-principal); 
-    border-radius: 3px; 
-    margin: 0.6rem 0; 
-    overflow: hidden; 
+.barra-factor {
+    height: 6px;
+    background: var(--borde-oscuro);
+    border-radius: 3px;
+    margin: 0.6rem 0;
+    overflow: hidden;
 }
 .barra-factor span { display: block; height: 100%; }
 
@@ -206,4 +215,121 @@ body {
 
 /* ============ ALERTAS ============ */
 .contenedor-alertas { bottom: 1.5rem; right: 1.5rem; z-index: 1080; display: flex; flex-direction: column; gap: 0.6rem; }
-.alerta-ls { background: var(--fondo-input); border: 1px solid var(--riesgo-critico); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--riesgo-critico); }
+.alerta-ls {
+    background: var(--fondo-tarjeta);
+    border: 1px solid var(--riesgo-critico);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--riesgo-critico);
+    box-shadow: 0 4px 15px rgba(17, 17, 17, 0.08);
+}
+
+/* ==========================================================================
+   PANEL DE ANÁLISIS (gráfico + tabla) — módulo tomado del proyecto "Lambda"
+   Usa sus propias clases lambda-*; comparte paleta con el resto vía las
+   variables de arriba, así que no hizo falta tocar panel.js.
+   ========================================================================== */
+.lambda-panel {
+    background: var(--fondo-tarjeta);
+    border: 1px solid var(--borde-oscuro);
+    border-radius: 12px;
+    padding: 1.75rem;
+}
+
+.lambda-panel-header { margin-bottom: 1.25rem; }
+
+.lambda-range-group .lambda-range-btn {
+    border: 1px solid var(--borde-oscuro);
+    background: var(--fondo-tarjeta);
+    color: var(--texto-principal);
+    font-weight: 600;
+    font-size: .85rem;
+    padding: .4rem .9rem;
+}
+.lambda-range-group .lambda-range-btn:hover { background: var(--fondo-input); }
+.lambda-range-group .lambda-range-btn.active {
+    background: var(--texto-principal);
+    border-color: var(--texto-principal);
+    color: #ffffff;
+}
+
+.lambda-chart-wrap { position: relative; width: 100%; }
+
+.lambda-legend-item {
+    font-size: .85rem;
+    color: var(--texto-secundario);
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+}
+.lambda-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.lambda-dot--ingresos { background: var(--texto-principal); }
+.lambda-dot--egresos { background: var(--utp-rojo); }
+
+.lambda-table thead th {
+    background: var(--texto-principal);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: .8rem;
+    text-transform: none;
+    border: none;
+    padding: .85rem 1rem;
+}
+.lambda-table thead th:first-child { border-top-left-radius: 8px; }
+.lambda-table thead th:last-child { border-top-right-radius: 8px; }
+.lambda-table tbody td {
+    padding: .85rem 1rem;
+    border-color: var(--borde-oscuro);
+    color: var(--texto-principal);
+    font-size: .92rem;
+}
+.lambda-table tbody tr:hover { background-color: var(--fondo-input); }
+
+.lambda-badge {
+    display: inline-block;
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .25rem .6rem;
+    border-radius: 20px;
+}
+.lambda-badge--ingreso { color: var(--riesgo-bajo); background: rgba(20,108,46,.1); }
+.lambda-badge--egreso { color: var(--utp-rojo); background: var(--utp-rojo-brillo); }
+
+.lambda-amount--positive { color: var(--texto-principal); font-weight: 600; }
+.lambda-amount--negative { color: var(--utp-rojo); font-weight: 600; }
+
+/* Tarjetas resumen (saldo / ingresos / egresos) del dashboard */
+.lambda-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.lambda-stat-card {
+    background: var(--fondo-tarjeta);
+    border: 1px solid var(--borde-oscuro);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+.lambda-stat-card--dark {
+    grid-column: 1 / -1;
+    background: var(--texto-principal);
+    border-color: var(--texto-principal);
+}
+.lambda-stat-card--dark .lambda-stat-label { color: rgba(255,255,255,.6); }
+.lambda-stat-card--dark .lambda-stat-value { color: #ffffff; }
+.lambda-stat-label { font-size: .8rem; color: var(--texto-secundario); font-weight: 500; }
+.lambda-stat-value { font-family: var(--fuente-titulos); font-size: 1.5rem; font-weight: 700; color: var(--texto-principal); }
+.lambda-stat-delta { font-size: .8rem; font-weight: 600; width: fit-content; padding: .1rem .5rem; border-radius: 20px; }
+.lambda-stat-delta--up { color: var(--riesgo-bajo); background: rgba(20,108,46,.1); }
+.lambda-stat-delta--down { color: var(--utp-rojo); background: var(--utp-rojo-brillo); }
+
+/* ============ Tarjetas de módulo (Simulador / Transacciones / Reglas) ============ */
+.tarjeta-modulo:hover {
+    transform: translateY(-3px);
+    transition: transform .15s ease, box-shadow .15s ease;
+    box-shadow: 0 10px 25px rgba(17, 17, 17, 0.08);
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 991.98px) {
+    .lambda-stat-grid { grid-template-columns: 1fr; }
+}
