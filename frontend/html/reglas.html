@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motor de Reglas · Lambda Shield</title>
+    <link rel="icon" href="../img/logo.ico" type="image/ico">
 
     <!-- Verificación de sesión -->
     <script src="../js/verificacion.js"></script>
@@ -12,6 +13,11 @@
     <!-- Bootstrap, Iconos y Estilos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     <link href="../css/estilos.css" rel="stylesheet">
 </head>
 <body>
@@ -36,7 +42,7 @@
     <div class="container pb-5">
         
         <div class="mb-4">
-            <h3 class="fw-bold mb-0 text-white">Parámetros del Motor Antifraude</h3>
+            <h3 class="fw-bold mb-0">Parámetros del Motor Antifraude</h3>
             <p class="text-secondary small mb-0">Desglose de los 8 factores ponderados. El puntaje máximo posible es de 100.</p>
         </div>
 
@@ -45,7 +51,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">20 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Monto Inusual</h6>
+                    <h6 class="fw-bold mb-2">Monto Inusual</h6>
                     <p class="text-secondary small mb-0">Compara el monto contra el gasto promedio histórico del titular. Desviaciones grandes suman más puntos.</p>
                 </div>
             </div>
@@ -54,7 +60,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">15 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Ubicación Geográfica</h6>
+                    <h6 class="fw-bold mb-2">Ubicación Geográfica</h6>
                     <p class="text-secondary small mb-0">Penaliza operaciones fuera del país habitual, y más aún en jurisdicciones catalogadas de alto riesgo.</p>
                 </div>
             </div>
@@ -63,7 +69,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">15 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Velocidad de Operaciones</h6>
+                    <h6 class="fw-bold mb-2">Velocidad de Operaciones</h6>
                     <p class="text-secondary small mb-0">Múltiples operaciones en poco tiempo es la firma clásica de una tarjeta comprometida ("card testing").</p>
                 </div>
             </div>
@@ -72,7 +78,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">10 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Horario Inusual</h6>
+                    <h6 class="fw-bold mb-2">Horario Inusual</h6>
                     <p class="text-secondary small mb-0">La franja de madrugada (00:00–05:00) concentra estadísticamente más intentos de fraude.</p>
                 </div>
             </div>
@@ -81,7 +87,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">10 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Dispositivo o Huella</h6>
+                    <h6 class="fw-bold mb-2">Dispositivo o Huella</h6>
                     <p class="text-secondary small mb-0">Un dispositivo sin historial previo incrementa la sospecha al combinarse con otras señales atípicas.</p>
                 </div>
             </div>
@@ -90,7 +96,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">10 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Categoría de Comercio</h6>
+                    <h6 class="fw-bold mb-2">Categoría de Comercio</h6>
                     <p class="text-secondary small mb-0">Rubros como casinos o exchanges de criptomonedas tienen una tasa base de fraude mucho más alta.</p>
                 </div>
             </div>
@@ -99,7 +105,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">10 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Tipo de Beneficiario</h6>
+                    <h6 class="fw-bold mb-2">Tipo de Beneficiario</h6>
                     <p class="text-secondary small mb-0">Transferencias hacia cuentas o destinatarios con los que el cliente no posee un historial validado previo.</p>
                 </div>
             </div>
@@ -108,7 +114,7 @@
             <div class="col-md-6 col-lg-3">
                 <div class="tarjeta-ls h-100 p-4 border-top border-danger border-3">
                     <div class="dato-mono fs-2 fw-bold text-danger mb-2">10 pts</div>
-                    <h6 class="fw-bold text-white mb-2">Historial de IP</h6>
+                    <h6 class="fw-bold mb-2">Historial de IP</h6>
                     <p class="text-secondary small mb-0">Conexiones a la banca desde direcciones IP que no concuerdan con el comportamiento geográfico habitual.</p>
                 </div>
             </div>
@@ -116,7 +122,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/motorFraude.js"></script>
     <script src="../js/app.js"></script>
 </body>
 </html>
