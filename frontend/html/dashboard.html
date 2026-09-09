@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analítico · Lambda Shield</title>
+    <link rel="icon" href="../img/logo.ico" type="image/ico">
+
+    <!-- Verificación de sesión (Solo rol ADMIN) -->
+    <script src="../js/verificacion.js"></script>
+    <script>blVerificarAutenticacion(['ADMIN']);</script>
+
+    <!-- Bootstrap, Iconos y Estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link href="../css/estilos.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Barra de Navegación del Administrador -->
+    <nav class="navbar navbar-expand-lg navbar-utp px-4 py-3 mb-4">
+        <a class="navbar-brand fw-bold" href="index.html">
+            <i class="bi bi-shield-lock-fill" style="color: var(--utp-rojo);"></i> LAMBDA SHIELD
+        </a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto ms-4">
+                <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link active fw-semibold" href="dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="simulador.html">Simulador</a></li>
+                <li class="nav-item"><a class="nav-link" href="transacciones.html">Transacciones</a></li>
+                <li class="nav-item"><a class="nav-link" href="reglas.html">Motor de Reglas</a></li>
+            </ul>
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 bg-light border px-3 py-1 rounded-pill" style="border-color: var(--borde-oscuro) !important;">
+                    <i class="bi bi-shield-shaded" style="color: var(--utp-rojo);"></i>
+                    <span class="small fw-semibold">Administrador</span>
+                    <span class="badge bg-danger small" style="font-size: 0.7rem;">ADMIN</span>
+                </div>
+                <button class="btn btn-secundario btn-sm" id="btnCerrarSesion">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenedor Principal del Dashboard -->
+    <div class="container pb-5">
+        
+        <!-- Cabecera del Panel Analítico -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">Dashboard Analítico de Fraude</h3>
+                <p class="text-secondary small mb-0">Inteligencia de datos, tendencias temporales y distribución analítica de riesgo.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge py-2 px-3" style="background-color: rgba(20, 108, 46, 0.1); color: var(--riesgo-bajo); border: 1px solid var(--riesgo-bajo);">
+                    <i class="bi bi-circle-fill small me-1"></i> Motor en Vivo
+                </span>
+                <button class="btn btn-secundario btn-sm" id="btnRecargarDatos" title="Recargar métricas">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Tarjetas de Métricas Clave (KPIs) -->
+        <div class="row g-3 mb-4">
+            <!-- 1. Volumen y Transacciones combinados -->
+            <div class="col-sm-6 col-lg-4 col-xl-2">
+                <div class="kpi-ls activo rounded h-100">
+                    <div class="kpi-valor" id="kpiVolumenTotal" style="font-size: 1.6rem;">S/ 0</div>
+                    <div class="kpi-etiqueta"><i class="bi bi-arrow-left-right text-secondary me-1"></i> <span id="kpiTotalTrx" class="fw-bold">0</span> Transacciones</div>
+                </div>
+            </div>
+            <!-- 2. Riesgo Bajo -->
+            <div class="col-sm-6 col-lg-4 col-xl-2">
+                <div class="kpi-ls rounded h-100" style="border-left-color: var(--riesgo-bajo);">
+                    <div class="kpi-valor" style="color: var(--riesgo-bajo);" id="kpiAprobadas">0</div>
+                    <div class="kpi-etiqueta">
+                        <i class="bi bi-check-circle-fill me-1" style="color: var(--riesgo-bajo);"></i> Aprobadas (Bajo)
+                        <span class="small fw-semibold ms-1" id="kpiTasaAprobadas">(0%)</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 3. Riesgo Medio -->
+            <div class="col-sm-6 col-lg-4 col-xl-2">
+                <div class="kpi-ls rounded h-100" style="border-left-color: var(--riesgo-medio);">
+                    <div class="kpi-valor" style="color: var(--riesgo-medio);" id="kpiMonitoreo">0</div>
+                    <div class="kpi-etiqueta">
+                        <i class="bi bi-eye-fill me-1" style="color: var(--riesgo-medio);"></i> Monitoreo (Medio)
+                        <span class="small fw-semibold ms-1" id="kpiTasaMonitoreo">(0%)</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 4. Riesgo Alto -->
+            <div class="col-sm-6 col-lg-4 col-xl-2">
+                <div class="kpi-ls rounded h-100" style="border-left-color: var(--riesgo-alto);">
+                    <div class="kpi-valor" style="color: var(--riesgo-alto);" id="kpiRevision">0</div>
+                    <div class="kpi-etiqueta">
+                        <i class="bi bi-hourglass-split me-1" style="color: var(--riesgo-alto);"></i> Revisión (Alto)
+                        <span class="small fw-semibold ms-1" id="kpiTasaRevision">(0%)</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 5. Riesgo Crítico -->
+            <div class="col-sm-6 col-lg-4 col-xl-2">
+                <div class="kpi-ls rounded h-100" style="border-left-color: var(--riesgo-critico);">
+                    <div class="kpi-valor" style="color: var(--riesgo-critico);" id="kpiBloqueadas">0</div>
+                    <div class="kpi-etiqueta">
+                        <i class="bi bi-x-octagon-fill me-1" style="color: var(--riesgo-critico);"></i> Rechazadas (Crít)
+                        <span class="small fw-semibold ms-1" id="kpiTasaBloqueadas">(0%)</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 6. Score Promedio -->
+            <div class="col-sm-6 col-lg-4 col-xl-2">
+                <div class="kpi-ls rounded h-100" style="border-left-color: var(--texto-secundario);">
+                    <div class="kpi-valor" style="color: var(--texto-principal);" id="kpiScorePromedio">0.0</div>
+                    <div class="kpi-etiqueta"><i class="bi bi-speedometer2 me-1" style="color: var(--texto-secundario);"></i> Score Promedio</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila 1 de Gráficos: Histórico Temporal + Desglose de Riesgo -->
+        <div class="row g-4 mb-4">
+            <!-- Gráfico 1: Histórico de Transferencias en el Tiempo -->
+            <div class="col-lg-8">
+                <div class="tarjeta-ls h-100 p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-0"><i class="bi bi-graph-up me-2" style="color: var(--utp-rojo);"></i> Histórico de Transferencias en el Tiempo</h5>
+                            <span class="text-secondary small">Volumen monetario (S/) procesado a lo largo del tiempo</span>
+                        </div>
+                        <div class="btn-group lambda-range-group mt-2 mt-md-0" role="group" aria-label="Rango temporal">
+                            <button type="button" class="btn lambda-range-btn" data-dias="7">7d</button>
+                            <button type="button" class="btn lambda-range-btn" data-dias="15">15d</button>
+                            <button type="button" class="btn lambda-range-btn active" data-dias="30">30d</button>
+                            <button type="button" class="btn lambda-range-btn" data-dias="90">3m</button>
+                        </div>
+                    </div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="chartHistorico"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Desglose según Nivel de Riesgo (Doughnut) -->
+            <div class="col-lg-4">
+                <div class="tarjeta-ls h-100 p-4">
+                    <div class="mb-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill me-2" style="color: var(--utp-rojo);"></i> Desglose por Nivel de Riesgo</h5>
+                        <span class="text-secondary small">Distribución de operaciones según evaluación del motor</span>
+                    </div>
+                    <div style="position: relative; height: 210px;" class="d-flex justify-content-center align-items-center">
+                        <canvas id="chartRiesgo"></canvas>
+                    </div>
+                    <div class="row text-center mt-3 pt-2 border-top g-2" style="border-color: var(--borde-oscuro) !important; font-size: 0.75rem;">
+                        <div class="col-3">
+                            <span class="d-block fw-bold" style="color: var(--riesgo-bajo);" id="legendBajoVal">0</span>
+                            <span class="text-secondary">Bajo</span>
+                        </div>
+                        <div class="col-3">
+                            <span class="d-block fw-bold" style="color: var(--riesgo-medio);" id="legendMedioVal">0</span>
+                            <span class="text-secondary">Medio</span>
+                        </div>
+                        <div class="col-3">
+                            <span class="d-block fw-bold" style="color: var(--riesgo-alto);" id="legendAltoVal">0</span>
+                            <span class="text-secondary">Alto</span>
+                        </div>
+                        <div class="col-3">
+                            <span class="d-block fw-bold" style="color: var(--riesgo-critico);" id="legendCriticoVal">0</span>
+                            <span class="text-secondary">Crítico</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila 2 de Gráficos: Distribución por Tipo de Transacción + Tabla de Incidentes Críticos -->
+        <div class="row g-4">
+            <!-- Gráfico 3: Distribución por Rubro / Tipo de Transacción (Barras) -->
+            <div class="col-lg-6">
+                <div class="tarjeta-ls h-100 p-4">
+                    <div class="mb-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-steps me-2" style="color: var(--utp-rojo);"></i> Distribución por Tipo de Transacción</h5>
+                        <span class="text-secondary small">Frecuencia de operaciones por categoría comercial y rubro</span>
+                    </div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="chartCategorias"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Transacciones Sospechosas y Críticas Recientes -->
+            <div class="col-lg-6">
+                <div class="tarjeta-ls h-100">
+                    <div class="cabecera-tarjeta d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-shield-exclamation me-2" style="color: var(--utp-rojo);"></i> Operaciones en Riesgo Moderado / Crítico
+                            <span class="subtitulo-tarjeta">Transacciones con necesidad de revisión o bloqueadas</span>
+                        </div>
+                        <a href="transacciones.html" class="btn btn-secundario btn-sm py-1 px-2" style="font-size: 0.75rem;">
+                            Ver Todo
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table lambda-table mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Código</th>
+                                    <th scope="col">Cliente / Benef.</th>
+                                    <th scope="col">Monto</th>
+                                    <th scope="col">Score</th>
+                                    <th scope="col">Veredicto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaIncidentesRecientes">
+                                <!-- Filas dinámicas generadas por dashboard.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila 3 de Gráficos: Análisis Horario y Entidades Destino -->
+        <div class="row g-4 mt-0">
+            <!-- Gráfico 4: Riesgo por Hora -->
+            <div class="col-lg-7">
+                <div class="tarjeta-ls h-100 p-4">
+                    <div class="mb-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2" style="color: var(--utp-rojo);"></i> Incidencias de Riesgo por Hora</h5>
+                        <span class="text-secondary small">Frecuencia de operaciones sospechosas o bloqueadas según la hora del día</span>
+                    </div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="chartHorasRiesgo"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico 5: Principales Bancos de Destino -->
+            <div class="col-lg-5">
+                <div class="tarjeta-ls h-100 p-4">
+                    <div class="mb-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-bank me-2" style="color: var(--utp-rojo);"></i> Top Bancos Destino</h5>
+                        <span class="text-secondary small">Distribución de transacciones salientes por entidad receptora</span>
+                    </div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="chartBancos"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Dependencias y scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>

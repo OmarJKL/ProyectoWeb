@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferencias · Lambda Shield</title>
+    <link rel="icon" href="../img/logo.ico" type="image/ico">
+
+    <!-- Verificación de sesión y control de acceso (solo rol USER) -->
+    <script src="../js/verificacion.js"></script>
+    <script>blVerificarAutenticacion(['USER']);</script>
+
+    <!-- Bootstrap, Iconos y Estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link href="../css/estilos.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Barra de Navegación del Usuario Estándar -->
+    <nav class="navbar navbar-expand-lg navbar-utp px-4 py-3 mb-4">
+        <a class="navbar-brand fw-bold" href="transferencias.html">
+            <i class="bi bi-shield-lock-fill text-danger"></i> LAMBDA SHIELD
+        </a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto ms-4">
+                <li class="nav-item">
+                    <a class="nav-link active fw-semibold" href="transferencias.html">
+                        <i class="bi bi-arrow-left-right me-1"></i> Transferencias
+                    </a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 bg-light border px-3 py-1 rounded-pill" style="border-color: var(--borde-oscuro) !important;">
+                    <i class="bi bi-person-circle fs-5" style="color: var(--utp-rojo);"></i>
+                    <span class="small fw-semibold" id="nombreUsuarioNav">Usuario</span>
+                    <span class="badge bg-dark small" style="font-size: 0.7rem;">USER</span>
+                </div>
+                <button class="btn btn-secundario btn-sm" id="btnCerrarSesion">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container pb-5">
+        
+        <!-- Tarjeta de Panorama de Cuenta -->
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="tarjeta-ls p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <span class="badge mb-2" style="background-color: var(--utp-rojo-brillo); color: var(--utp-rojo); border: 1px solid var(--utp-rojo);">
+                                <i class="bi bi-wallet2 me-1"></i> Cuenta de Origen
+                            </span>
+                            <h4 class="fw-bold mb-1" id="tipoCuentaTitular">Cuenta Sueldo Ahorros</h4>
+                            <p class="text-secondary small mb-0">
+                                <strong>Titular:</strong> <span id="nombreTitularCuenta">—</span> · 
+                                <strong>N° Cuenta:</strong> <span class="dato-mono" id="numeroCuentaTitular">—</span>
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <span class="text-secondary small d-block">Saldo disponible</span>
+                            <h2 class="fw-bold mb-0 dato-mono text-dark" id="saldoDisponibleDisplay">S/ 0.00</h2>
+                            <span class="text-success small"><i class="bi bi-shield-check"></i> Protegido por Lambda Shield</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Columna Izquierda: Formulario de Transferencia -->
+            <div class="col-lg-6">
+                <div class="tarjeta-ls h-100">
+                    <div class="cabecera-tarjeta">
+                        <i class="bi bi-send-fill text-danger me-2"></i> Ejecutar Transferencia
+                        <span class="subtitulo-tarjeta">Completa los datos para emitir tu pago o envío de dinero</span>
+                    </div>
+
+                    <form id="formTransferencia" class="p-4" novalidate>
+                        
+                        <!-- Modo de Beneficiario -->
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Tipo de Destinatario</span>
+                            </label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="tipoBeneficiarioRadio" id="beneficiarioFrecuente" value="recurrente" checked>
+                                <label class="btn btn-outline-dark btn-sm py-2" for="beneficiarioFrecuente">
+                                    <i class="bi bi-star-fill text-warning me-1"></i> Frecuente / Guardado
+                                </label>
+
+                                <input type="radio" class="btn-check" name="tipoBeneficiarioRadio" id="beneficiarioNuevo" value="nuevo">
+                                <label class="btn btn-outline-dark btn-sm py-2" for="beneficiarioNuevo">
+                                    <i class="bi bi-person-plus-fill me-1"></i> Nuevo Destinatario
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Selector para Beneficiario Frecuente -->
+                        <div id="seccionBeneficiarioFrecuente" class="mb-3">
+                            <label class="form-label">Seleccionar Contacto Frecuente</label>
+                            <select class="form-select" id="selectContactoFrecuente">
+                                <option value="Carlos Mendoza" data-cuenta="191-4567891-0-23" data-banco="BCP">Carlos Mendoza · BCP (191-4567891-0-23)</option>
+                                <option value="Laura Torres" data-cuenta="0011-0391-8201-90" data-banco="BBVA">Laura Torres · BBVA (0011-0391-8201-90)</option>
+                                <option value="Distribuidora Lima SAC" data-cuenta="200-3001294-1-88" data-banco="Interbank">Distribuidora Lima SAC · Interbank (200-3001294-1-88)</option>
+                            </select>
+                        </div>
+
+                        <!-- Campos para Nuevo Destinatario (Ocultos por defecto) -->
+                        <div id="seccionBeneficiarioNuevo" class="d-none mb-3">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label">Nombre del Beneficiario</label>
+                                    <input type="text" class="form-control" id="nuevoNombreBeneficiario" placeholder="Ej. Juan Pérez Ramos">
+                                </div>
+                                <div class="col-7">
+                                    <label class="form-label">Número de Cuenta / CCI</label>
+                                    <input type="text" class="form-control dato-mono" id="nuevoNumeroCuenta" placeholder="002191004829103045">
+                                </div>
+                                <div class="col-5">
+                                    <label class="form-label">Entidad Financiera</label>
+                                    <select class="form-select" id="nuevoBanco">
+                                        <option value="BCP">BCP</option>
+                                        <option value="BBVA">BBVA</option>
+                                        <option value="Interbank">Interbank</option>
+                                        <option value="Scotiabank">Scotiabank</option>
+                                        <option value="BanBif">BanBif</option>
+                                        <option value="Banco de la Nación">Banco de la Nación</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monto y Rubro/Categoría -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Monto a Transferir (S/)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold">S/</span>
+                                    <input type="number" class="form-control dato-mono fw-bold" id="montoTransferencia" value="120.00" min="1" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Rubro / Categoría</label>
+                                <select class="form-select" id="categoriaTransferencia">
+                                    <option value="retail">Compras / Retail</option>
+                                    <option value="servicios">Pago de Servicios</option>
+                                    <option value="restaurante">Restaurante / Alimentación</option>
+                                    <option value="electronica">Tecnología / Equipos</option>
+                                    <option value="casino">Casino / Apuestas</option>
+                                    <option value="cripto">Criptoactivos / Exchange</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Concepto / Motivo -->
+                        <div class="mb-3">
+                            <label class="form-label">Concepto (Opcional)</label>
+                            <input type="text" class="form-control" id="conceptoTransferencia" placeholder="Ej. Pago de cuota de insumos o servicios" value="Pago de servicios">
+                        </div>
+
+                        <!-- Opciones avanzadas de contexto / simulación -->
+                        <div class="mb-4">
+                            <a class="text-decoration-none small text-secondary d-flex align-items-center gap-1" data-bs-toggle="collapse" href="#opcionesAvanzadas" role="button" aria-expanded="false">
+                                <i class="bi bi-gear-fill"></i> Parámetros de conexión y seguridad <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <div class="collapse mt-2" id="opcionesAvanzadas">
+                                <div class="p-3 bg-light border rounded" style="border-color: var(--borde-oscuro) !important;">
+                                    <div class="row g-2 small">
+                                        <div class="col-6">
+                                            <label class="form-label text-secondary mb-1">Dispositivo de acceso</label>
+                                            <select class="form-select form-select-sm" id="trDispositivo">
+                                                <option value="reconocido">Habitual (Registrado)</option>
+                                                <option value="nuevo">Nuevo (Dispositivo no reconocido)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label text-secondary mb-1">Dirección IP</label>
+                                            <select class="form-select form-select-sm" id="trIp">
+                                                <option value="conocida">IP Habitual (Red doméstica/trabajo)</option>
+                                                <option value="nueva">IP Nueva (Sospechosa/VPN)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label text-secondary mb-1">Ubicación de conexión</label>
+                                            <select class="form-select form-select-sm" id="trPais">
+                                                <option value="local">Perú (Habitual)</option>
+                                                <option value="regional">Región (Chile, Colombia...)</option>
+                                                <option value="alto_riesgo">Jurisdicción de Alto Riesgo</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label text-secondary mb-1">Frecuencia en última hora</label>
+                                            <input type="number" class="form-control form-control-sm" id="trVelocidad" value="1" min="1" max="15">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón de Envío -->
+                        <button type="submit" class="btn btn-principal w-100 py-2 fs-6">
+                            <i class="bi bi-shield-check me-1"></i> Validar y Transferir
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Notificación Visual de Resultado -->
+            <div class="col-lg-6">
+                <div class="tarjeta-ls h-100" id="contenedorNotificacion">
+                    <div class="cabecera-tarjeta">
+                        <i class="bi bi-bell-fill text-danger me-2"></i> Estado de la Operación
+                        <span class="subtitulo-tarjeta">Evaluación en tiempo real del motor antifraude</span>
+                    </div>
+
+                    <!-- Estado Inicial (Sin operación reciente) -->
+                    <div id="notificacionInicial" class="p-5 text-center text-secondary">
+                        <i class="bi bi-shield-lock fs-1 d-block mb-3" style="color: var(--borde-oscuro);"></i>
+                        <h5 class="fw-bold text-dark">Ninguna transacción en curso</h5>
+                        <p class="small mb-0">Ingresa los datos de la transferencia a la izquierda y pulsa el botón para procesarla con el motor de seguridad.</p>
+                    </div>
+
+                    <!-- Notificación Visual Dinámica (Aprobada / Verificación / Rechazada) -->
+                    <div id="notificacionResultado" class="p-4 d-none">
+                        
+                        <!-- Caja de Estado Principal -->
+                        <div id="cajaVeredictoVisual" class="p-4 rounded-3 text-center mb-4 border">
+                            <i id="iconoVeredicto" class="bi fs-1 d-block mb-2"></i>
+                            <h4 id="tituloVeredicto" class="fw-bold mb-1">Resultado</h4>
+                            <p id="mensajeVeredicto" class="small mb-0"></p>
+                        </div>
+
+                        <!-- Ficha de Detalles de la Operación -->
+                        <div class="p-3 bg-light rounded border mb-3" style="border-color: var(--borde-oscuro) !important;">
+                            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom" style="border-color: var(--borde-oscuro) !important;">
+                                <span class="text-secondary small">Código de Operación:</span>
+                                <span class="dato-mono fw-bold small" id="resCodigo">—</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom" style="border-color: var(--borde-oscuro) !important;">
+                                <span class="text-secondary small">Beneficiario Destino:</span>
+                                <span class="fw-semibold small" id="resBeneficiario">—</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom" style="border-color: var(--borde-oscuro) !important;">
+                                <span class="text-secondary small">Monto Transferido:</span>
+                                <span class="dato-mono fw-bold text-dark" id="resMonto">—</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom" style="border-color: var(--borde-oscuro) !important;">
+                                <span class="text-secondary small">Evaluación de Riesgo:</span>
+                                <span id="resBadgeRiesgo" class="etiqueta-nivel">—</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-secondary small">Puntaje de Riesgo:</span>
+                                <span class="dato-mono fw-bold" id="resPuntaje">— / 100</span>
+                            </div>
+                        </div>
+
+                        <!-- Motivo / Factores Relevantes -->
+                        <div class="alert alert-secondary py-2 px-3 small mb-0" id="cajaMotivoVeredicto" style="background-color: var(--fondo-input); border-color: var(--borde-oscuro);">
+                            <i class="bi bi-info-circle me-1"></i> <span id="textoMotivoVeredicto">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Transferencias del Usuario -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="tarjeta-ls">
+                    <div class="cabecera-tarjeta d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-clock-history text-danger me-2"></i> Mis Transferencias Recientes
+                            <span class="subtitulo-tarjeta">Historial de envíos emitidos desde esta cuenta</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Código</th>
+                                    <th scope="col">Fecha / Hora</th>
+                                    <th scope="col">Beneficiario</th>
+                                    <th scope="col">Rubro</th>
+                                    <th scope="col">Monto</th>
+                                    <th scope="col">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMisTransferencias">
+                                <!-- Filas generadas por transferencias.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/motorFraude.js"></script>
+    <script src="../js/transferencias.js"></script>
+</body>
+</html>

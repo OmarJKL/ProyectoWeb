@@ -9,9 +9,14 @@
     <!-- Script de autenticación -->
     <script src="../js/verificacion.js"></script>
     <script>
-        // Si ya hay sesión activa, redirigir al panel general (index.html)
+        // Si ya hay sesión activa, redirigir a la vista correspondiente según el rol
         if (sessionStorage.getItem(CLAVE_AUTENTICACION_BL) === 'true') {
-            window.location.replace('index.html');
+            const rol = blObtenerRol();
+            if (rol === 'USER') {
+                window.location.replace('transferencias.html');
+            } else {
+                window.location.replace('index.html');
+            }
         }
     </script>
 
@@ -57,7 +62,12 @@
         </form>
 
         <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--borde) !important;">
-            <p class="text-secondary small mb-0">Demo usuario: <strong >admin</strong> clave: <strong >lambda2026</strong></p>
+            <div class="text-secondary small mb-1">
+                <strong>Admin:</strong> <code>admin</code> / <code>lambda2026</code>
+            </div>
+            <div class="text-secondary small mb-0">
+                <strong>Usuario:</strong> <code>usuario</code> / <code>user123</code>
+            </div>
         </div>
     </div>
 
@@ -70,10 +80,15 @@
             const clave = document.getElementById('clave').value;
             const cajaError = document.getElementById('errorLogin');
 
-            // Llamada a la función del archivo verificacion.js
-            if (blIniciarSesion(usuario, clave)) {
-                sessionStorage.setItem(CLAVE_AUTENTICACION_BL, 'true');
-                window.location.replace('index.html');
+            // Autenticación con RBAC mediante verificacion.js
+            const usuarioAutenticado = blAutenticar(usuario, clave);
+            if (usuarioAutenticado) {
+                blGuardarSesion(usuarioAutenticado);
+                if (usuarioAutenticado.rol === 'ADMIN') {
+                    window.location.replace('index.html');
+                } else {
+                    window.location.replace('transferencias.html');
+                }
             } else {
                 cajaError.classList.remove('d-none');
             }

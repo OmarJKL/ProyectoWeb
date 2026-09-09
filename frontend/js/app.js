@@ -104,6 +104,8 @@
     function leerTransaccionFormulario() {
         const cliente = $('#trCliente').value;
         const [hh] = $('#trHora').value.split(':');
+        const bancoDestino = $('#trBancoDestino') ? $('#trBancoDestino').value : 'BCP';
+        
         return {
             cliente,
             clienteNombre: obtenerNombreCliente(cliente),
@@ -115,6 +117,10 @@
             operacionesUltimaHora: Number($('#trVelocidad').value) || 1,
             beneficiario: $('#trBeneficiario').value,
             ip: $('#trIp').value,
+            bancoDestino: bancoDestino,
+            beneficiarioNombre: $('#trBeneficiario').value === 'recurrente' ? 'Contacto Frecuente' : 'Nuevo Contacto',
+            cuentaDestino: '191-0000000-0-00',
+            concepto: 'Operación Manual'
         };
     }
 
@@ -347,24 +353,34 @@
         const clientes = ['C-001', 'C-002', 'C-003'];
         const categorias = ['retail', 'restaurante', 'servicios', 'electronica', 'casino', 'cripto'];
         const paises = ['local', 'local', 'local', 'regional', 'alto_riesgo'];
+        const bancos = ['BCP', 'BBVA', 'Interbank', 'Scotiabank'];
+        const destinatarios = ['Carlos Mendoza', 'Laura Torres', 'Distribuidora SAC', 'Inversiones Pacífico', 'BetOnline', 'Crypto Latam'];
         
         const cliente = clientes[Math.floor(Math.random() * clientes.length)];
         const optPromedio = form ? form.querySelector(`#trCliente option[value="${cliente}"]`) : null;
         const promedio = optPromedio ? Number(optPromedio.dataset.promedio) : 100;
 
         const esSospechosa = Math.random() < 0.25;
+        
+        // El fraude suele pasar de madrugada o muy tarde (0-5 o 22-23), pero también algo durante el día
+        const horaFraude = Math.random() < 0.7 ? Math.floor(Math.random() * 5) : Math.floor(18 + Math.random() * 6);
+        const horaNormal = Math.floor(Math.random() * 24);
 
         return {
             cliente,
             clienteNombre: cliente === 'C-001' ? 'María Fernández' : cliente === 'C-002' ? 'Jorge Salas' : 'Ana Quiroz',
             monto: esSospechosa ? Math.round(promedio * (4 + Math.random() * 6)) : Math.round(promedio * (0.5 + Math.random() * 1.2)),
             categoria: esSospechosa ? categorias[Math.floor(Math.random() * categorias.length)] : categorias[Math.floor(Math.random() * 4)],
-            hora: esSospechosa ? Math.floor(Math.random() * 5) : Math.floor(Math.random() * 24),
+            hora: esSospechosa ? horaFraude : horaNormal,
             pais: esSospechosa ? paises[3 + Math.floor(Math.random() * 2)] : paises[Math.floor(Math.random() * 3)],
             dispositivo: esSospechosa ? 'nuevo' : 'reconocido',
             operacionesUltimaHora: esSospechosa ? 4 + Math.floor(Math.random() * 8) : 1 + Math.floor(Math.random() * 2),
             beneficiario: esSospechosa ? 'nuevo' : 'recurrente',
-            ip: esSospechosa ? 'nueva' : 'conocida'
+            ip: esSospechosa ? 'nueva' : 'conocida',
+            bancoDestino: bancos[Math.floor(Math.random() * bancos.length)],
+            beneficiarioNombre: destinatarios[Math.floor(Math.random() * destinatarios.length)],
+            cuentaDestino: '191-' + Math.floor(1000000 + Math.random() * 9000000) + '-0-11',
+            concepto: 'Operación ' + (esSospechosa ? 'Web' : 'App')
         };
     }
 
@@ -437,6 +453,24 @@
     /* ---------------------------------------------------------
        Arranque inicial
        --------------------------------------------------------- */
+    // Si no hay transacciones previas en memoria, generar conjunto inicial para visualización
+    if (estado.transacciones.length === 0 && !localStorage.getItem('estadoBancoLambda')) {
+        for (let i = 0; i < 15; i++) {
+            const tr = generarTransaccionAleatoria();
+            const veredicto = motor.evaluar(tr, { promedioCliente: tr.cliente === 'C-002' ? 950 : 180 });
+            const fecha = new Date();
+            fecha.setDate(fecha.getDate() - Math.floor(Math.random() * 20));
+            fecha.setHours(tr.hora);
+            estado.transacciones.push({
+                id: `TR-${String(estado.siguienteId++).padStart(5, '0')}`,
+                fecha: fecha,
+                tr: tr,
+                veredicto: veredicto
+            });
+        }
+        guardarEstado();
+    }
+
     repintarTablaCompleta();
     actualizarKPIs();
 })();
