@@ -1,11 +1,3 @@
-/* ==========================================================================
-   LAMBDA SHIELD — Autenticación (demo, solo del lado del cliente)
-   IMPORTANTE: esto es una verificación en el navegador con sessionStorage,
-   pensada para una demo/proyecto. No reemplaza un login real con backend:
-   cualquiera que sepa JavaScript podría saltarla editando la consola.
-   Para producción, esto debe validarse contra un servidor (API + tokens).
-   ========================================================================== */
-
 const CLAVE_AUTENTICACION_BL = 'autenticacionLambdaShield';
 
 // Usuarios de demostración. Cambia esto por tu propia validación real para el proyecto.
@@ -24,14 +16,10 @@ function blIniciarSesion(usuario, clave) {
     return USUARIOS_BL.some(u => u.usuario === usuario && u.clave === clave);
 }
 
-/**
- * Si no hay una sesión activa, redirige de inmediato a login.html.
- * Debe llamarse lo antes posible en el <head> de cada página protegida (antes de
- * pintar el contenido) para evitar que se vea el panel sin autenticar.
- */
-function blVerificarAutenticacion() {
+
+function blVerificarAutenticacion(rutaLogin = 'login.html') {
     if (sessionStorage.getItem(CLAVE_AUTENTICACION_BL) !== 'true') {
-        window.location.replace('login.html');
+        window.location.replace(rutaLogin);
     }
 }
 
@@ -40,5 +28,6 @@ function blVerificarAutenticacion() {
  */
 function blCerrarSesion() {
     sessionStorage.removeItem(CLAVE_AUTENTICACION_BL);
-    window.location.replace('login.html');
+    const estaEnPaginaInterna = window.location.pathname.includes('/frontend/html/');
+    window.location.replace(estaEnPaginaInterna ? 'login.html' : 'frontend/html/login.html');
 }

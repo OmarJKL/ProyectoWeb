@@ -11,7 +11,7 @@
     <script>
         // Si ya hay sesión activa, redirigir al panel general (index.html)
         if (sessionStorage.getItem(CLAVE_AUTENTICACION_BL) === 'true') {
-            window.location.replace('index.html');
+            window.location.replace('../index.html');
         }
     </script>
 
@@ -73,7 +73,7 @@
             // Llamada a la función del archivo verificacion.js
             if (blIniciarSesion(usuario, clave)) {
                 sessionStorage.setItem(CLAVE_AUTENTICACION_BL, 'true');
-                window.location.replace('index.html');
+                window.location.replace('../../index.html');
             } else {
                 cajaError.classList.remove('d-none');
             }

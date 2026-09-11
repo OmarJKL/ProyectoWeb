@@ -1,19 +1,7 @@
-/**
- * ==========================================================================
- * LAMBDA SHIELD · app.js
- * --------------------------------------------------------------------------
- * Capa de interfaz: conecta la lógica pura de motorFraude.js con el DOM.
- * Incluye manejo seguro de localStorage para la arquitectura multipágina
- * y renderizado condicional de elementos (Radar SVG, Tabla, KPIs).
- * ==========================================================================
- */
 
 (() => {
     'use strict';
-
-    /* ---------------------------------------------------------
-       Estado de la aplicación (Persistencia segura)
-       --------------------------------------------------------- */
+       // Estado de la aplicación (Persistencia segura)
     function cargarEstado() {
         try {
             const guardado = localStorage.getItem('estadoBancoLambda');

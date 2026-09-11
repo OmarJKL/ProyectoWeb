@@ -1,12 +1,3 @@
-/**
- * JavaScript Vanilla.
- * Lambda — panel de análisis financiero (gráfico + tabla) — vive solo en el dashboard (index.html).
- *
- * Reemplaza `buildSampleData()` por una llamada a tu API/backend
- * cuando esté lista; la forma de los datos que espera el resto
- * del archivo está documentada justo debajo.
- */
-
 document.addEventListener("DOMContentLoaded", () => {
   const COLOR_BLACK = "#111111";
   const COLOR_RED = "#c8102e";
@@ -126,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---- Botones de rango (7d / 15d / 1m / 3m / 1a) ----
   const rangeButtons = document.querySelectorAll(".lambda-range-btn");
   rangeButtons.forEach((btn) => {
     btn.addEventListener("click", () => {

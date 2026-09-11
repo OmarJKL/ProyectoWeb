@@ -1,24 +1,3 @@
-/**
- * ==========================================================================
- * LAMBDA SHIELD · motorFraude.js
- * --------------------------------------------------------------------------
- * Motor de detección de fraude basado en REGLAS PONDERADAS.
- *
- * Por qué reglas y no "una IA mágica": en un caso real, el primer filtro
- * de un banco casi siempre es un motor determinista y auditable (puedes
- * explicarle a un regulador o a un cliente EXACTAMENTE por qué se bloqueó
- * una operación). Un modelo de ML se apila encima de esto en producción,
- * pero la base explicable siempre va primero. Por eso cada regla devuelve
- * no solo un puntaje, sino el "porqué".
- *
- * Cada regla:
- *   - recibe la transacción + un "contexto" (historial simulado del cliente)
- *   - devuelve { puntaje, max, motivo } con puntaje entre 0 y max
- *
- * El puntaje total es la suma de los puntajes individuales (tope 100).
- * Este archivo NO toca el DOM: es lógica pura, testeable de forma aislada.
- * ==========================================================================
- */
 
 const ReglasFraude = (() => {
 
@@ -32,12 +11,6 @@ const ReglasFraude = (() => {
         return minOut + limitado * (maxOut - minOut);
     }
 
-    /* =========================================================
-       REGLA 1 — Monto inusual respecto al comportamiento habitual
-       Peso máximo: 20 pts (Reajustado de 25)
-       Lógica: compara el monto contra el promedio histórico del
-       titular. Cuanto más se aleja hacia arriba, más sospechoso.
-       ========================================================= */
     function reglaMonto(tr, contexto) {
         const MAX = 20;
         const promedio = contexto.promedioCliente || 100;
@@ -60,13 +33,6 @@ const ReglasFraude = (() => {
         return { id: 'monto', etiqueta: 'Monto inusual', puntaje: Math.round(puntaje), max: MAX, motivo };
     }
 
-    /* =========================================================
-       REGLA 2 — Ubicación geográfica
-       Peso máximo: 15 pts (Reajustado de 20)
-       Lógica: transacciones fuera del país habitual, y sobre todo
-       en jurisdicciones de alto riesgo (paraísos fiscales, países
-       con alta tasa de fraude reportada), suman puntos.
-       ========================================================= */
     function reglaUbicacion(tr) {
         const MAX = 15;
         const tabla = {
@@ -78,13 +44,7 @@ const ReglasFraude = (() => {
         return { id: 'ubicacion', etiqueta: 'Ubicación geográfica', puntaje: r.puntaje, max: MAX, motivo: r.motivo };
     }
 
-    /* =========================================================
-       REGLA 3 — Horario inusual
-       Peso máximo: 10 pts (Reajustado de 15)
-       Lógica: la franja de madrugada (00:00–05:00) concentra
-       estadísticamente más fraude con tarjeta/clonación que el
-       resto del día.
-       ========================================================= */
+
     function reglaHorario(tr) {
         const MAX = 10;
         const hora = tr.hora; // 0-23
@@ -103,12 +63,6 @@ const ReglasFraude = (() => {
         return { id: 'horario', etiqueta: 'Horario de la operación', puntaje, max: MAX, motivo };
     }
 
-    /* =========================================================
-       REGLA 4 — Velocidad / frecuencia de transacciones
-       Peso máximo: 15 pts (Reajustado de 20)
-       Lógica: múltiples operaciones en poco tiempo es la firma
-       clásica de una tarjeta comprometida ("card testing").
-       ========================================================= */
     function reglaVelocidad(tr) {
         const MAX = 15;
         const n = tr.operacionesUltimaHora;
@@ -127,13 +81,6 @@ const ReglasFraude = (() => {
         return { id: 'velocidad', etiqueta: 'Velocidad de transacciones', puntaje: Math.round(puntaje), max: MAX, motivo };
     }
 
-    /* =========================================================
-       REGLA 5 — Dispositivo / huella no reconocida
-       Peso máximo: 10 pts
-       Lógica: un dispositivo nuevo no es fraude por sí solo, pero
-       combinado con otras señales (monto alto, ubicación rara)
-       incrementa fuertemente la sospecha.
-       ========================================================= */
     function reglaDispositivo(tr) {
         const MAX = 10;
         if (tr.dispositivo === 'nuevo') {
@@ -142,12 +89,7 @@ const ReglasFraude = (() => {
         return { id: 'dispositivo', etiqueta: 'Dispositivo / huella digital', puntaje: 0, max: MAX, motivo: 'Dispositivo reconocido y previamente asociado al titular.' };
     }
 
-    /* =========================================================
-       REGLA 6 — Categoría de comercio de alto riesgo
-       Peso máximo: 10 pts
-       Lógica: ciertos rubros (casinos, cripto) tienen tasas base
-       de fraude / lavado más altas y se penalizan directamente.
-       ========================================================= */
+   
     function reglaCategoria(tr) {
         const MAX = 10;
         const riesgoAlto = ['casino', 'cripto'];
@@ -157,12 +99,7 @@ const ReglasFraude = (() => {
         return { id: 'categoria', etiqueta: 'Categoría de comercio', puntaje: 0, max: MAX, motivo: `Rubro "${tr.categoria}" sin riesgo elevado asociado.` };
     }
 
-    /* =========================================================
-       REGLA 7 — Tipo de Beneficiario (NUEVA)
-       Peso máximo: 10 pts
-       Lógica: Las transferencias a cuentas o beneficiarios con 
-       los que el cliente no ha operado antes elevan el riesgo.
-       ========================================================= */
+   
     function reglaBeneficiario(tr) {
         const MAX = 10;
         if (tr.beneficiario === 'nuevo') {
@@ -171,12 +108,7 @@ const ReglasFraude = (() => {
         return { id: 'beneficiario', etiqueta: 'Tipo de beneficiario', puntaje: 0, max: MAX, motivo: 'Beneficiario recurrente y validado.' };
     }
 
-    /* =========================================================
-       REGLA 8 — Historial de IP (NUEVA)
-       Peso máximo: 10 pts
-       Lógica: Conexiones desde direcciones IP desconocidas o 
-       que no concuerdan con el comportamiento habitual del usuario.
-       ========================================================= */
+    
     function reglaIp(tr) {
         const MAX = 10;
         if (tr.ip === 'nueva') {

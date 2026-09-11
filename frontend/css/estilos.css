@@ -1,6 +1,6 @@
 :root {
-    /* ---- Superficies (antes: tema oscuro -> ahora: tema claro Lambda) ---- */
-    --fondo-principal: #f7f7f5;
+    /* ---- Superficies ( tema claro Lambda) ---- */
+    --fondo-principal: #ffffff;
     --fondo-tarjeta:   #ffffff;
     --fondo-input:     #f7f7f5;
     --borde-oscuro:    #e4e2df;
