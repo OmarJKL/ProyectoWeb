@@ -69,6 +69,7 @@
     const textoVeredicto   = $('#textoVeredicto');
     const contenedorRadar  = $('#contenedorRadar');
     const listaFactores    = $('#listaFactores');
+    const cajaErrorForm    = $('#errorFormulario');
 
     /* ---------------------------------------------------------
        Helpers de dominio
@@ -87,6 +88,35 @@
             ip: { conocida: 'Habitual', nueva: 'Nueva' }
         };
         return diccionarios[tipo][codigo] || codigo;
+    }
+
+    /**
+     * Valida los campos del formulario (el form usa novalidate, así que los
+     * min/max del HTML no se aplican). Devuelve un mensaje o null si todo está bien.
+     */
+    function validarFormulario() {
+        const montoTexto = $('#trMonto').value.trim();
+        const monto = Number(montoTexto);
+        if (montoTexto === '' || !Number.isFinite(monto) || monto <= 0) {
+            return 'Ingresa un monto mayor a 0.';
+        }
+
+        if (!$('#trHora').value) {
+            return 'Selecciona la hora de la operación.';
+        }
+
+        const velocidad = Number($('#trVelocidad').value);
+        if (!Number.isInteger(velocidad) || velocidad < 1 || velocidad > 20) {
+            return 'Las operaciones en la última hora deben ser un número entero entre 1 y 20.';
+        }
+
+        return null;
+    }
+
+    function mostrarErrorFormulario(mensaje) {
+        if (!cajaErrorForm) return;
+        cajaErrorForm.textContent = mensaje || '';
+        cajaErrorForm.classList.toggle('d-none', !mensaje);
     }
 
     function leerTransaccionFormulario() {
@@ -386,6 +416,9 @@
     if (form) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            const error = validarFormulario();
+            mostrarErrorFormulario(error);
+            if (error) return;
             evaluarYRegistrar(leerTransaccionFormulario());
         });
     }
@@ -428,4 +461,3 @@
     repintarTablaCompleta();
     actualizarKPIs();
 })();
-
