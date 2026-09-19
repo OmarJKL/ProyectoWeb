@@ -26,7 +26,12 @@
         <a class="navbar-brand fw-bold" href="../../index.html">
             <i class="bi bi-shield-lock-fill text-danger"></i> LAMBDA SHIELD
         </a>
-        <div class="collapse navbar-collapse">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menuPrincipal" aria-controls="menuPrincipal"
+                aria-expanded="false" aria-label="Abrir o cerrar el menú de navegación">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="menuPrincipal">
             <ul class="navbar-nav me-auto ms-4">
                 <li class="nav-item"><a class="nav-link" href="../../index.html">inicio</a></li>
                 <li class="nav-item"><a class="nav-link active" href="simulador.html">Simulador</a></li>
@@ -132,6 +137,9 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="alert alert-danger d-none py-2 mt-3 mb-0 small" id="errorFormulario" role="alert"
+                             style="background-color: var(--rojo-tenue); border-color: var(--riesgo-critico); color: var(--riesgo-critico);"></div>
 
                         <button type="submit" class="btn btn-principal w-100 mt-4">
                             <i class="bi bi-cpu"></i> Ejecutar Motor Antifraude
