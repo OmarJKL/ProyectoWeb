@@ -52,6 +52,17 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .navbar-utp .nav-link { color: var(--texto-secundario); }
 .navbar-utp .nav-link:hover, .navbar-utp .nav-link.active { color: var(--utp-rojo); }
 
+/* Botón hamburguesa (visible solo por debajo de 992px, breakpoint "lg") */
+.navbar-utp .navbar-toggler {
+    border: 1px solid var(--borde-oscuro);
+    padding: .35rem .6rem;
+}
+.navbar-utp .navbar-toggler:hover { border-color: var(--utp-rojo); }
+.navbar-utp .navbar-toggler:focus {
+    border-color: var(--utp-rojo);
+    box-shadow: 0 0 0 .2rem var(--utp-rojo-brillo);
+}
+
 /* ============ TARJETAS ============ */
 .tarjeta-ls, .card {
     background-color: var(--fondo-tarjeta);
@@ -332,4 +343,13 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 /* ============ Responsive ============ */
 @media (max-width: 991.98px) {
     .lambda-stat-grid { grid-template-columns: 1fr; }
+
+    /* Menú desplegado (hamburguesa) */
+    .navbar-utp .navbar-collapse {
+        margin-top: .75rem;
+        padding-top: .75rem;
+        border-top: 1px solid var(--borde-oscuro);
+    }
+    .navbar-utp .navbar-nav { margin-left: 0 !important; } /* anula el ms-4 del HTML */
+    .navbar-utp .navbar-collapse .btn { width: 100%; margin-top: .5rem; }
 }
