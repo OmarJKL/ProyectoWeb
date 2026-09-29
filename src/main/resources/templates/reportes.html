@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Reportes y Auditoría')}"></head>
+<body>
+    <!-- Barra de Navegación del Administrador -->
+    <nav th:replace="~{fragments/navbar :: navbar('reportes')}"></nav>
+
+    <div class="container pb-5">
+        <!-- Cabecera y Botones de Exportación -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <div>
+                <h3 class="fw-bold mb-0">Centro de Reportes Antifraude</h3>
+                <p class="text-secondary small mb-0">Consolidado ejecutivo, exportación de auditoría y análisis de incidencias.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a th:href="@{/api/v1/reportes/transacciones/csv}" class="btn btn-principal">
+                    <i class="bi bi-file-earmark-spreadsheet-fill"></i> Descargar Reporte CSV
+                </a>
+                <button class="btn btn-secundario" onclick="window.print()">
+                    <i class="bi bi-printer-fill"></i> Imprimir / Guardar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Tarjetas Resumen de Reportes -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="tarjeta-ls p-3 border-top border-dark border-3">
+                    <span class="text-secondary small d-block">Total Operaciones</span>
+                    <h3 class="fw-bold dato-mono my-1" th:text="${resumenReporte.total()}">0</h3>
+                    <span class="text-secondary small">Evaluadas por el motor</span>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="tarjeta-ls p-3 border-top border-success border-3">
+                    <span class="text-secondary small d-block">Operaciones Aprobadas</span>
+                    <h3 class="fw-bold dato-mono my-1 text-success" th:text="${resumenReporte.aprobadas()}">0</h3>
+                    <span class="text-secondary small">Riesgo bajo sin incidentes</span>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="tarjeta-ls p-3 border-top border-warning border-3">
+                    <span class="text-secondary small d-block">En Monitoreo / Revisión</span>
+                    <h3 class="fw-bold dato-mono my-1" style="color: var(--riesgo-alto);"
+                        th:text="${resumenReporte.monitoreadas() + resumenReporte.enRevision()}">0</h3>
+                    <span class="text-secondary small">Riesgo medio y alto</span>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="tarjeta-ls p-3 border-top border-danger border-3">
+                    <span class="text-secondary small d-block">Bloqueos Críticos</span>
+                    <h3 class="fw-bold dato-mono my-1 text-danger" th:text="${resumenReporte.bloqueadas()}">0</h3>
+                    <span class="text-secondary small" th:text="'Tasa: ' + ${#numbers.formatDecimal(resumenReporte.tasaBloqueo(), 1, 1)} + '%'">Tasa: 0.0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas Financieras Prevenidas -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="tarjeta-ls p-4 border-top border-danger border-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-shield-lock-fill fs-1 text-danger"></i>
+                        <div>
+                            <span class="text-secondary small d-block">Monto en Riesgo Prevenido / Retenido</span>
+                            <h3 class="fw-bold dato-mono text-danger mb-0"
+                                th:text="'S/ ' + ${#numbers.formatDecimal(resumenReporte.montoBloqueado(), 1, 'COMMA', 2, 'POINT')}">S/ 0.00</h3>
+                            <span class="text-secondary small">Capital protegido frente a operaciones sospechosas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="tarjeta-ls p-4 border-top border-dark border-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-cash-stack fs-1 text-secondary"></i>
+                        <div>
+                            <span class="text-secondary small d-block">Volumen Total Evaluado</span>
+                            <h3 class="fw-bold dato-mono mb-0"
+                                th:text="'S/ ' + ${#numbers.formatDecimal(resumenReporte.montoTotal(), 1, 'COMMA', 2, 'POINT')}">S/ 0.00</h3>
+                            <span class="text-secondary small">Suma acumulada de transacciones procesadas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla Detallada para Reporte -->
+        <div class="tarjeta-ls border-top border-danger border-3">
+            <div class="cabecera-tarjeta d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table"></i> Detalle para Auditoría y Cumplimiento Normativo</span>
+                <span class="badge bg-secondary" th:text="${#lists.size(transacciones)} + ' registros'">0 registros</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Titular</th>
+                            <th>Monto</th>
+                            <th>Comercio</th>
+                            <th>Ubicación</th>
+                            <th>Hora</th>
+                            <th>Score</th>
+                            <th>Nivel</th>
+                            <th>Decisión</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(transacciones)}">
+                            <td colspan="10" class="text-center text-secondary py-5">
+                                No se registran operaciones evaluadas aún para generar el reporte.
+                            </td>
+                        </tr>
+                        <tr th:each="tx : ${transacciones}">
+                            <td class="dato-mono fw-bold" th:text="${tx.id()}">TR-00001</td>
+                            <td th:text="${tx.fecha()}">29/09/2026</td>
+                            <td th:text="${tx.clienteNombre()}">María Fernández</td>
+                            <td class="dato-mono" th:text="'S/ ' + ${#numbers.formatDecimal(tx.monto(), 1, 2)}">S/ 150.00</td>
+                            <td th:text="${tx.categoria()}">Retail</td>
+                            <td th:text="${tx.pais()}">Perú</td>
+                            <td class="dato-mono" th:text="${#numbers.formatInteger(tx.hora(), 2)} + ':00'">14:00</td>
+                            <td class="dato-mono fw-bold" th:style="'color:' + ${tx.colorNivel()}" th:text="${tx.puntaje()}">12</td>
+                            <td>
+                                <span class="etiqueta-nivel"
+                                      th:style="'background-color:' + ${tx.colorNivel()} + '22; color:' + ${tx.colorNivel()} + '; border: 1px solid ' + ${tx.colorNivel()}"
+                                      th:text="${#strings.capitalize(tx.nivel())}">Bajo</span>
+                            </td>
+                            <td>
+                                <span th:style="'color:' + ${tx.colorNivel()} + '; font-size:0.85rem; font-weight:600;'">
+                                    <i class="bi" th:classappend="${tx.iconoEstado()}"></i>
+                                    <span th:text="${tx.estado()}">Aprobada</span>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/auth.js}"></script>
+</body>
+</html>
