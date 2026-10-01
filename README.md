@@ -13,6 +13,38 @@ El núcleo de la solución implementa un **motor de reglas de scoring ponderado*
 
 ---
 
+## 🏛️ Arquitectura del Sistema (MVC Estricto)
+
+El proyecto sigue formalmente el patrón arquitectónico **Modelo - Vista - Controlador (MVC)** estructurado en 3 capas de paquetes bien delimitadas en Java:
+
+```text
+src/main/java/com/lambdashield/fraude/
+│
+├── FraudeApplication.java            # Punto de entrada de la aplicación Spring Boot
+│
+├── model/                            # ◄── CAPA MODELO (Datos, reglas y lógica de negocio)
+│   ├── entity/                       # Clases de dominio JPA (Cliente, Cuenta, Transacción, etc.)
+│   ├── enums/                        # Tipos enumerados fijos (NivelRiesgo, EstadoTransaccion, etc.)
+│   ├── request/                      # DTOs de entrada enviados por el cliente/usuario
+│   ├── response/                     # DTOs estructurados de salida hacia la vista o API
+│   ├── store/                        # Repositorios en memoria thread-safe con datos semilla
+│   ├── rule/                         # Motor antifraude: 8 reglas heurísticas (RF001–RF008)
+│   ├── service/                      # Lógica del dominio (evaluación, conciliación, reportes)
+│   └── repository/                   # Interfaces Spring Data JPA preparadas para persistencia
+│
+├── controller/                       # ◄── CAPA CONTROLADOR (Recepción y ruteo de peticiones)
+│   ├── view/                         # Controladores MVC que renderizan vistas HTML con Thymeleaf
+│   ├── api/                          # Controladores REST que exponen servicios web en formato JSON
+│   └── config/                       # Interceptores de sesión web y configuración de rutas
+│
+└── view/                             # ◄── CAPA VISTA (Documentación de la capa de presentación)
+    └── ViewLayer.java                # Enlace documental hacia las plantillas Thymeleaf
+```
+
+> **Nota sobre la Vista:** Las plantillas HTML de la vista son procesadas por Thymeleaf y se ubican por convención del framework en `src/main/resources/templates/`.
+
+---
+
 ## ✨ Características Principales
 
 ### 👤 1. Portal del Cliente (Banca en Línea)
@@ -31,7 +63,7 @@ El núcleo de la solución implementa un **motor de reglas de scoring ponderado*
 
 ## ⚙️ Motor de Reglas Antifraude (Punto 18 de Arquitectura)
 
-Cada transacción es evaluada por un conjunto desacoplado de 8 reglas (`com.lambdashield.fraude.rule.*`):
+Cada transacción es evaluada por un conjunto desacoplado de 8 reglas (`com.lambdashield.fraude.model.rule.*`):
 
 | Código | Regla | Condición de Disparo | Peso Inicial |
 | :--- | :--- | :--- | :---: |
@@ -68,7 +100,7 @@ Cada transacción es evaluada por un conjunto desacoplado de 8 reglas (`com.lamb
 * **Java Development Kit (JDK):** Versión **21 LTS** o superior instalada.
   * Para comprobar: `java -version`
 * **Git:** Para clonar el repositorio.
-* **Navegador web moderno:** Google Chrome, Microsoft Edge, Firefox, etc.
+* **Navegador web moderno:** Google Chrome, Microsoft Edge, Firefox, Brave, etc.
 * *Nota:* **No es necesario instalar Maven por separado.** El proyecto incluye el Maven Wrapper (`mvnw` / `mvnw.cmd`).
 
 ---
@@ -117,46 +149,21 @@ Una vez que en la consola aparezca `Started FraudeApplication in ... seconds`:
 
 ---
 
-## 📁 Estructura del Código
+## 🌐 Catálogo de APIs REST (Clean Endpoints)
 
-```text
-spring/
-├── pom.xml                                   # Configuración de dependencias Maven
-├── mvnw / mvnw.cmd                           # Maven Wrapper
-└── src/
-    ├── main/
-    │   ├── java/com/lambdashield/fraude/
-    │   │   ├── FraudeApplication.java        # Clase principal de arranque Spring Boot
-    │   │   ├── config/                       # Interceptores de autenticación y configuración web
-    │   │   ├── controller/
-    │   │   │   ├── api/                      # Controladores REST (/api/v1/...)
-    │   │   │   └── mvc/                      # Controladores de vistas Thymeleaf
-    │   │   ├── dto/                          # Records para peticiones y respuestas
-    │   │   ├── entity/                       # Entidades JPA preparadas para persistencia
-    │   │   ├── enums/                        # Enumeraciones de dominio (Riesgo, Estado, Canal)
-    │   │   ├── repository/                   # Interfaces Spring Data JPA
-    │   │   ├── rule/                         # Implementación individual de las 8 reglas (RF001–RF008)
-    │   │   ├── service/                      # Lógica de negocio (Detección, Transacciones, Dashboard, Reportes)
-    │   │   └── store/                        # Almacenes thread-safe en memoria (evaluaciones, clientes, usuarios)
-    │   └── resources/
-    │       ├── application.properties        # Propiedades del servidor y Thymeleaf
-    │       ├── static/                       # Assets estáticos (CSS, JS Vanilla, favicon)
-    │       └── templates/                    # Vistas HTML Thymeleaf (dashboard, cliente, reglas, etc.)
-    └── test/                                 # Pruebas unitarias y de contexto
-```
+Todas las APIs siguen el estándar RESTful con responsabilidad única y versionado `/api/v1/`:
 
----
-
-## 🌐 Endpoints REST Principales
-
-* `POST /api/v1/transacciones`: Evalúa y registra una operación a través del motor antifraude.
-* `GET  /api/v1/transacciones`: Lista todas las evaluaciones históricas.
-* `GET  /api/v1/transacciones/kpis`: Retorna los indicadores consolidados (total, aprobadas, monitoreo, bloqueadas).
-* `GET  /api/v1/dashboard/movimientos?dias={n}`: Provee telemetría de ingresos/egresos para Chart.js.
-* `GET  /api/v1/dashboard/recientes?dias={n}`: Devuelve los movimientos recientes para la tabla dinámica.
-* `GET  /api/v1/dashboard/resumen?dias={n}`: Retorna el balance contable (`Saldo = Base + Ingresos - Egresos`).
-* `GET  /api/v1/reglas`: Lista los pesos y descripciones de las 8 reglas.
-* `GET  /api/v1/reportes/transacciones/csv`: Descarga el archivo CSV de auditoría.
+| Método | Endpoint | Descripción / Función |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/evaluation` | Evalúa una transacción contra las 8 reglas y guarda el resultado. |
+| `GET` | `/api/v1/evaluation` | Obtiene el historial completo de evaluaciones registradas. |
+| `DELETE` | `/api/v1/evaluation` | Limpia el historial de evaluaciones en memoria. |
+| `GET` | `/api/v1/metric` | Retorna los KPIs consolidados (Total, Aprobadas, Monitoreo, Bloqueadas, Score Promedio). |
+| `GET` | `/api/v1/metric/summary?days={n}` | Retorna el balance contable (`Saldo = Base + Ingresos - Egresos`) del periodo. |
+| `GET` | `/api/v1/metric/movement?days={n}` | Provee la serie temporal de ingresos/egresos para el gráfico *Chart.js*. |
+| `GET` | `/api/v1/metric/recent?days={n}` | Devuelve los movimientos recientes sincronizados para la tabla del dashboard. |
+| `GET` | `/api/v1/rule` | Devuelve la lista canónica de reglas antifraude con sus pesos y condiciones. |
+| `GET` | `/api/v1/report/export` | Genera y descarga el reporte de auditoría en formato **CSV**. |
 
 ---
 

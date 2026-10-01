@@ -31,7 +31,7 @@
     if (btnReset) {
         btnReset.addEventListener('click', async () => {
             if (confirm('¿Deseas reiniciar el historial de transacciones evaluadas?')) {
-                await fetch('/api/v1/transacciones', { method: 'DELETE' });
+                await fetch('/api/v1/evaluation', { method: 'DELETE' });
                 window.location.reload();
             }
         });
@@ -39,7 +39,7 @@
 
     async function sincronizarKpisYTabla() {
         try {
-            const resKpis = await fetch('/api/v1/transacciones/kpis');
+            const resKpis = await fetch('/api/v1/evaluation/kpis');
             if (resKpis.ok) {
                 const k = await resKpis.json();
                 const elTotal = document.getElementById('kpiTotal');
