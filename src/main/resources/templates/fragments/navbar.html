@@ -5,7 +5,19 @@
         <a class="navbar-brand fw-bold" th:href="${session.rol == 'CLIENTE'} ? @{/operacion} : @{/}">
             <i class="bi bi-shield-lock-fill text-danger"></i> LAMBDA SHIELD
         </a>
-        <div class="collapse navbar-collapse">
+
+        <!-- BOTÓN HAMBURGUESA -->
+        <button class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarPrincipal"
+            aria-controls="navbarPrincipal"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+                
+        <div class="collapse navbar-collapse" id="navbarPrincipal">
             <ul class="navbar-nav me-auto ms-4">
                 <!-- Enlaces para el Administrador / Analista -->
                 <th:block th:if="${session.rol != 'CLIENTE'}">
@@ -38,7 +50,7 @@
                 </th:block>
             </ul>
 
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3 flex-column flex-lg-row">
                 <span class="text-secondary small d-none d-md-inline" th:if="${session.nombreUsuario != null}">
                     <span class="badge me-1"
                           th:classappend="${session.rol == 'CLIENTE' ? 'bg-secondary' : 'bg-danger'}"
