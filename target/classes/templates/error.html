@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Aviso del Sistema')}"></head>
+<body class="d-flex align-items-center justify-content-center vh-100">
+    <div class="tarjeta-ls p-4 text-center shadow" style="max-width: 480px; width: 100%; border-top: 4px solid var(--utp-rojo);">
+        <i class="bi bi-exclamation-octagon-fill fs-1 text-danger mb-3 d-block"></i>
+        <h4 class="fw-bold mb-2">Aviso del Sistema</h4>
+        <p class="text-secondary small mb-4" th:text="${error != null ? error : 'Ha ocurrido un error inesperado al procesar la solicitud.'}">
+            Ha ocurrido un error inesperado.
+        </p>
+        <a th:href="@{/}" class="btn btn-principal">
+            <i class="bi bi-house-door-fill"></i> Volver al Inicio
+        </a>
+    </div>
+</body>
+</html>

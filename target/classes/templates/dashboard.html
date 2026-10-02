@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Panel General')}"></head>
+<body>
+    <!-- Barra de Navegación -->
+    <nav th:replace="~{fragments/navbar :: navbar('inicio')}"></nav>
+
+    <div class="container">
+        <div class="mb-5">
+            <h1 class="fw-bold">Panorama financiero</h1>
+            <p class="text-secondary mb-0">Resumen de movimientos de la cuenta y acceso rápido al motor antifraude.</p>
+        </div>
+
+        <!-- ===== RESUMEN + GRÁFICO ===== -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <div class="lambda-stat-grid h-100">
+                    <div class="lambda-stat-card lambda-stat-card--dark">
+                        <span class="lambda-stat-label">Saldo actual</span>
+                        <span class="lambda-stat-value" id="dashSaldoValor" th:text="'S/ ' + ${#numbers.formatDecimal(resumen.saldo(), 1, 'COMMA', 2, 'POINT')}">S/ 24,180.50</span>
+                        <span class="lambda-stat-delta lambda-stat-delta--up" id="dashSaldoDelta" th:text="'+' + ${resumen.variacionSaldo()} + '% este mes'">+8.4% este mes</span>
+                    </div>
+                    <div class="lambda-stat-card">
+                        <span class="lambda-stat-label">Ingresos</span>
+                        <span class="lambda-stat-value" id="dashIngresosValor" th:text="'S/ ' + ${#numbers.formatDecimal(resumen.ingresos(), 1, 'COMMA', 0, 'POINT')}">S/ 15,420</span>
+                        <span class="lambda-stat-delta lambda-stat-delta--up" id="dashIngresosDelta" th:text="'+' + ${resumen.variacionIngresos()} + '%'">+12.1%</span>
+                    </div>
+                    <div class="lambda-stat-card">
+                        <span class="lambda-stat-label">Egresos</span>
+                        <span class="lambda-stat-value" id="dashEgresosValor" th:text="'S/ ' + ${#numbers.formatDecimal(resumen.egresos(), 1, 'COMMA', 0, 'POINT')}">S/ 6,930</span>
+                        <span class="lambda-stat-delta lambda-stat-delta--down" id="dashEgresosDelta" th:text="${resumen.variacionEgresos()} + '%'">-3.6%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="lambda-panel h-100">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 lambda-panel-header">
+                        <div>
+                            <h2 class="h4 fw-bold mb-1">Movimientos de la cuenta</h2>
+                            <p class="text-secondary mb-0 small">Ingresos vs. egresos en el periodo seleccionado.</p>
+                        </div>
+
+                        <div class="btn-group lambda-range-group" role="group" aria-label="Rango de fechas">
+                            <button type="button" class="btn lambda-range-btn" data-range="7">7d</button>
+                            <button type="button" class="btn lambda-range-btn" data-range="15">15d</button>
+                            <button type="button" class="btn lambda-range-btn" data-range="30">1m</button>
+                            <button type="button" class="btn lambda-range-btn" data-range="90">3m</button>
+                            <button type="button" class="btn lambda-range-btn active" data-range="365">1a</button>
+                        </div>
+                    </div>
+
+                    <div class="lambda-chart-wrap">
+                        <canvas id="transactionsChart" height="110"></canvas>
+                    </div>
+
+                    <div class="lambda-legend d-flex flex-wrap gap-4 mt-3">
+                        <span class="lambda-legend-item"><i class="lambda-dot lambda-dot--ingresos"></i>Ingresos</span>
+                        <span class="lambda-legend-item"><i class="lambda-dot lambda-dot--egresos"></i>Egresos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TABLA HISTORIAL ===== -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="lambda-panel">
+                    <h2 class="h4 fw-bold mb-3">Historial reciente</h2>
+                    <div class="table-responsive">
+                        <table class="table lambda-table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Fecha</th>
+                                    <th scope="col">Descripción</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col" class="text-end">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <tr th:each="mov : ${movimientosRecientes}">
+                                    <td th:text="${mov.fecha()}">01/01/2026</td>
+                                    <td th:text="${mov.descripcion()}">Pago de cliente</td>
+                                    <td>
+                                        <span class="lambda-badge" th:classappend="${mov.esIngreso() ? 'lambda-badge--ingreso' : 'lambda-badge--egreso'}" th:text="${mov.esIngreso() ? 'Ingreso' : 'Egreso'}">Ingreso</span>
+                                    </td>
+                                    <td class="text-end" th:classappend="${mov.esIngreso() ? 'lambda-amount--positive' : 'lambda-amount--negative'}" th:text="(${mov.esIngreso()} ? '+ ' : '- ') + 'S/ ' + ${mov.monto()}">+ S/ 450</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== MÓDULOS DEL MOTOR ANTIFRAUDE ===== -->
+        <div class="mb-4">
+            <h2 class="h4 fw-bold mb-0">Motor antifraude</h2>
+            <p class="text-secondary small mb-0">Selecciona un módulo para continuar con la evaluación del proyecto grupal.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center pb-5">
+            <div class="col-md-6 col-lg-3">
+                <div class="tarjeta-ls tarjeta-modulo h-100">
+                    <div class="p-4 text-center">
+                        <i class="bi bi-sliders fs-1" style="color: var(--utp-rojo);"></i>
+                        <h4 class="fw-bold mt-3">Simulador</h4>
+                        <p class="text-secondary small">Evalúa transacciones con los 8 parámetros de riesgo.</p>
+                        <a th:href="@{/simulador}" class="btn btn-principal w-100 mt-3">Ir al Simulador</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="tarjeta-ls tarjeta-modulo h-100">
+                    <div class="p-4 text-center">
+                        <i class="bi bi-list-check fs-1" style="color: var(--utp-rojo);"></i>
+                        <h4 class="fw-bold mt-3">Transacciones</h4>
+                        <p class="text-secondary small">Historial completo e incidencias bloqueadas.</p>
+                        <a th:href="@{/transacciones}" class="btn btn-principal w-100 mt-3">Ver Historial</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="tarjeta-ls tarjeta-modulo h-100">
+                    <div class="p-4 text-center">
+                        <i class="bi bi-diagram-3-fill fs-1" style="color: var(--utp-rojo);"></i>
+                        <h4 class="fw-bold mt-3">Reglas</h4>
+                        <p class="text-secondary small">Reglas RF001–RF008, pesos y matriz oficial de scoring.</p>
+                        <a th:href="@{/reglas}" class="btn btn-principal w-100 mt-3">Explorar Motor</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="tarjeta-ls tarjeta-modulo h-100">
+                    <div class="p-4 text-center">
+                        <i class="bi bi-file-earmark-bar-graph fs-1" style="color: var(--utp-rojo);"></i>
+                        <h4 class="fw-bold mt-3">Reportes</h4>
+                        <p class="text-secondary small">Auditoría, exportación CSV e informes ejecutivos.</p>
+                        <a th:href="@{/reportes}" class="btn btn-principal w-100 mt-3">Ver Reportes</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/panel.js}"></script>
+    <script th:src="@{/js/auth.js}"></script>
+</body>
+</html>
