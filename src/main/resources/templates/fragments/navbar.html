@@ -7,8 +7,7 @@
         </a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto ms-4">
-                <!-- Enlaces para el Administrador / Analista -->
-                <th:block th:if="${session.rol != 'CLIENTE'}">
+                <th:block th:if="${session.rol == 'ADMIN'}">
                     <li class="nav-item">
                         <a class="nav-link" th:classappend="${paginaActiva == 'inicio' ? 'active' : ''}" th:href="@{/}">Inicio</a>
                     </li>
@@ -28,7 +27,26 @@
                     </li>
                 </th:block>
 
-                <!-- Enlaces para el Usuario Estándar (Cliente) -->
+                <th:block th:if="${session.rol == 'ANALISTA'}">
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${paginaActiva == 'inicio' ? 'active' : ''}" th:href="@{/}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${paginaActiva == 'simulador' ? 'active' : ''}" th:href="@{/simulador}">Simulador</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${paginaActiva == 'transacciones' ? 'active' : ''}" th:href="@{/transacciones}">Transacciones</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${paginaActiva == 'reglas' ? 'active' : ''}" th:href="@{/reglas}">Motor de Reglas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${paginaActiva == 'reportes' ? 'active' : ''}" th:href="@{/reportes}">
+                            <i class="bi bi-file-earmark-bar-graph"></i> Reportes
+                        </a>
+                    </li>
+                </th:block>
+
                 <th:block th:if="${session.rol == 'CLIENTE'}">
                     <li class="nav-item">
                         <a class="nav-link" th:classappend="${paginaActiva == 'operacion' ? 'active' : ''}" th:href="@{/operacion}">
@@ -41,8 +59,8 @@
             <div class="d-flex align-items-center gap-3">
                 <span class="text-secondary small d-none d-md-inline" th:if="${session.nombreUsuario != null}">
                     <span class="badge me-1"
-                          th:classappend="${session.rol == 'CLIENTE' ? 'bg-secondary' : 'bg-danger'}"
-                          th:text="${session.rol == 'CLIENTE' ? 'Cliente' : 'Administrador'}">Admin</span>
+                          th:classappend="${session.rol == 'CLIENTE' ? 'bg-secondary' : (session.rol == 'ANALISTA' ? 'bg-warning text-dark' : 'bg-danger')}"
+                          th:text="${session.rol == 'CLIENTE' ? 'Cliente' : (session.rol == 'ANALISTA' ? 'Analista' : 'Administrador')}">Admin</span>
                     <span th:text="${session.nombreUsuario}">Usuario</span>
                 </span>
                 <a th:href="@{/logout}" class="btn btn-secundario btn-sm" id="btnCerrarSesion">
