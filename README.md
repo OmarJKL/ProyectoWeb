@@ -7,15 +7,15 @@
 
 ## 📋 Descripción del Proyecto
 
-**Lambda Shield** es una solución integral orientada a la banca digital que combina una interfaz de operaciones financieras seguras para clientes con un avanzado centro de control y monitoreo para analistas y administradores antifraude.
+**Lambda Shield** es una solución integral orientada a la banca digital que combina una interfaz de operaciones financieras seguras para clientes con un avanzado centro de control y monitoreo para analistas y administradores.
 
-El núcleo de la solución implementa un **motor de reglas de scoring ponderado** alineado estrictamente con las especificaciones técnicas del documento de arquitectura (Sección 18), evaluando cada transacción frente a múltiples factores de riesgo contextuales y de comportamiento.
+El núcleo de la solución implementa un **motor de reglas de scoring ponderado** alineado con la arquitectura del sistema, evaluando transacciones en tiempo real y generando alertas con trazabilidad.
 
 ---
 
 ## 🏛️ Arquitectura del Sistema (MVC Estricto)
 
-El proyecto sigue formalmente el patrón arquitectónico **Modelo - Vista - Controlador (MVC)** estructurado en 3 capas de paquetes bien delimitadas en Java:
+El proyecto sigue el patrón arquitectónico **Modelo - Vista - Controlador (MVC)** estructurado en 3 capas de paquetes bien delimitadas en Java:
 
 ```text
 src/main/java/com/lambdashield/fraude/
@@ -77,21 +77,17 @@ Cada transacción es evaluada por un conjunto desacoplado de 8 reglas (`com.lamb
 | **RF008** | Beneficiario nuevo + monto alto | `nuevo && monto > umbral` | **20 pts** |
 
 ### 🎯 Escala de Scoring y Decisiones
-* **0 – 29 pts**: **BAJO** $\rightarrow$ `APROBAR` (Operación legítima procesada de inmediato).
-* **30 – 59 pts**: **MEDIO** $\rightarrow$ `MONITOREAR` (Aprobada con trazabilidad reforzada).
-* **60 – 79 pts**: **ALTO** $\rightarrow$ `RETENER / ALERTAR` (Pausa temporal para validación).
-* **80 – 100 pts**: **CRÍTICO** $\rightarrow$ `BLOQUEAR / ALERTA CRÍTICA` (Detención preventiva inmediata).
+* **0 – 29 pts**: **BAJO** → `APROBAR` (Operación legítima procesada de inmediato).
+* **30 – 59 pts**: **MEDIO** → `MONITOREAR` (Aprobada con trazabilidad reforzada).
+* **60 – 79 pts**: **ALTO** → `RETENER / ALERTAR` (Pausa temporal para validación).
+* **80 – 100 pts**: **CRÍTICO** → `BLOQUEAR / ALERTA CRÍTICA` (Detención preventiva inmediata).
 * *Normalización:* La sumatoria acumulada trunca automáticamente al tope de **100 puntos**.
 
 ---
 
 ## 🔐 Credenciales de Acceso para Pruebas
 
-| Rol | Usuario | Contraseña | Vistas y Accesos Disponibles |
-| :--- | :--- | :--- | :--- |
-| **Administrador** | `admin` | `lambda2026` | Inicio, Simulador, Transacciones, Motor de Reglas, Reportes |
-| **Analista** | `analista` | `fraude123` | Monitoreo general, auditoría e investigación |
-| **Cliente Estándar** | `usuario` *(o `maria`)* | `cliente123` *(o `123456`)* | Banca en Línea, realizar transferencias, saldo personal |
+Usuarios de prueba definidos en UsuarioStore.
 
 ---
 
@@ -118,7 +114,7 @@ cd TU_REPOSITORIO
 
 #### En Windows (PowerShell o CMD):
 ```powershell
-.\mvnw.cmd spring-boot:run
+./mvnw.cmd spring-boot:run
 ```
 
 #### En Linux o macOS:
@@ -130,14 +126,14 @@ chmod +x mvnw
 ### 3. Acceder en el navegador
 Una vez que en la consola aparezca `Started FraudeApplication in ... seconds`:
 * Abre tu navegador e ingresa a: **[http://localhost:8080](http://localhost:8080)**
-* Se mostrará la pantalla de inicio de sesión. Inicia con las credenciales de administrador o cliente indicadas arriba.
+* Se mostrará la pantalla de inicio de sesión. Inicia con las credenciales de administrador o cliente indicadas en `UsuarioStore`.
 
 ---
 
 ## 💻 Ejecución desde Entornos de Desarrollo (IDEs)
 
 ### IntelliJ IDEA (Recomendado):
-1. Selecciona **File $\rightarrow$ Open...** y elige la carpeta del proyecto donde se encuentra el `pom.xml`.
+1. Selecciona **File → Open...** y elige la carpeta del proyecto donde se encuentra el `pom.xml`.
 2. Espera a que IntelliJ sincronice las dependencias de Maven.
 3. Asegúrate de tener seleccionado el **JDK 21** en *Project Structure* (`Ctrl + Alt + Shift + S`).
 4. Abre `src/main/java/com/lambdashield/fraude/FraudeApplication.java` y haz clic en el botón verde **Run** (o presiona `Shift + F10`).
