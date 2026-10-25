@@ -1,6 +1,7 @@
 package com.lambdashield.fraude.controller.view;
 
 import com.lambdashield.fraude.model.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,8 +31,12 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String postLogin(@RequestParam String usuario, @RequestParam String clave, HttpSession session, Model model) {
+    public String postLogin(@RequestParam String usuario, @RequestParam String clave,
+                            HttpSession session, HttpServletRequest request, Model model) {
         if (authService.validar(usuario, clave)) {
+            // Previene fijación de sesión: se renueva el identificador tras autenticar.
+            request.changeSessionId();
+
             String rol = authService.obtenerRol(usuario);
             String nombre = authService.obtenerNombreUsuario(usuario);
 

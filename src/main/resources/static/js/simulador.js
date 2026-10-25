@@ -45,7 +45,7 @@
 
     async function enviarYEvaluar(datos) {
         try {
-            const res = await fetch('/api/v1/evaluation', {
+            const res = await window.fetchConSesion('/api/v1/evaluation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)

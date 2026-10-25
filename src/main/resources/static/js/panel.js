@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadAndRenderChart(rangeDays) {
         try {
-            const res = await fetch('/api/v1/metric/movement?days=' + rangeDays);
+            const res = await window.fetchConSesion('/api/v1/metric/movement?days=' + rangeDays);
+            if (!res.ok) return;
             const data = await res.json();
             const labels = data.map(d => d.fecha);
             const ingresos = data.map(d => d.ingreso);
@@ -85,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadAndRenderSummary(rangeDays) {
         try {
-            const res = await fetch('/api/v1/metric/summary?days=' + rangeDays);
+            const res = await window.fetchConSesion('/api/v1/metric/summary?days=' + rangeDays);
             if (!res.ok) return;
             const data = await res.json();
 
@@ -109,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadAndRenderTable(rangeDays) {
         try {
-            const res = await fetch('/api/v1/metric/recent?days=' + rangeDays);
+            const res = await window.fetchConSesion('/api/v1/metric/recent?days=' + rangeDays);
             if (!res.ok) return;
             const movimientos = await res.json();
             const tbody = document.getElementById("transactionsTableBody");

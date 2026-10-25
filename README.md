@@ -1,7 +1,7 @@
 # 🛡️ LAMBDA SHIELD · Sistema de Detección de Fraude Bancario
 
 > **Plataforma web bancaria y motor heurístico de prevención de fraude en tiempo real.**  
-> Desarrollado con **Java 21 LTS**, **Spring Boot 3**, **Thymeleaf**, **Bootstrap 5** y **JavaScript Vanilla**.
+> Desarrollado con **Java 21 LTS**, **Spring Boot 4.1.1**, **Thymeleaf**, **Bootstrap 5** y **JavaScript Vanilla**.
 
 ---
 
@@ -23,14 +23,14 @@ src/main/java/com/lambdashield/fraude/
 ├── FraudeApplication.java            # Punto de entrada de la aplicación Spring Boot
 │
 ├── model/                            # ◄── CAPA MODELO (Datos, reglas y lógica de negocio)
-│   ├── entity/                       # Clases de dominio JPA (Cliente, Cuenta, Transacción, etc.)
+│   ├── entity/                       # Clases de dominio anotadas para JPA (persistencia actual en memoria)
 │   ├── enums/                        # Tipos enumerados fijos (NivelRiesgo, EstadoTransaccion, etc.)
 │   ├── request/                      # DTOs de entrada enviados por el cliente/usuario
 │   ├── response/                     # DTOs estructurados de salida hacia la vista o API
 │   ├── store/                        # Repositorios en memoria thread-safe con datos semilla
 │   ├── rule/                         # Motor antifraude: 8 reglas heurísticas (RF001–RF008)
 │   ├── service/                      # Lógica del dominio (evaluación, conciliación, reportes)
-│   └── repository/                   # Interfaces Spring Data JPA preparadas para persistencia
+│   └── repository/                   # Interfaces de repositorio (persistencia en memoria; preparadas para JPA)
 │
 ├── controller/                       # ◄── CAPA CONTROLADOR (Recepción y ruteo de peticiones)
 │   ├── view/                         # Controladores MVC que renderizan vistas HTML con Thymeleaf
@@ -87,11 +87,14 @@ Cada transacción es evaluada por un conjunto desacoplado de 8 reglas (`com.lamb
 
 ## 🔐 Credenciales de Acceso para Pruebas
 
-| Rol | Usuario | Contraseña | Vistas y Accesos Disponibles |
-| :--- | :--- | :--- | :--- |
-| **Administrador** | `admin` | `lambda2026` | Inicio, Simulador, Transacciones, Motor de Reglas, Reportes |
-| **Analista** | `analista` | `fraude123` | Monitoreo general, auditoría e investigación |
-| **Cliente Estándar** | `usuario` *(o `maria`)* | `cliente123` *(o `123456`)* | Banca en Línea, realizar transferencias, saldo personal |
+> **Nota:** usuarios de prueba definidos en `UsuarioStore`.
+
+Las contraseñas no se documentan ni se almacenan en texto plano; se conservan como hash BCrypt en memoria.
+
+### Seguridad de sesión
+* Las claves se verifican con **BCrypt** (`BCryptPasswordEncoder`).
+* Tras un login correcto se renueva el identificador de sesión para prevenir *session fixation*.
+* Los inicios de sesión fallidos permanecen en la pantalla de login sin crear una sesión autenticada.
 
 ---
 
@@ -130,7 +133,7 @@ chmod +x mvnw
 ### 3. Acceder en el navegador
 Una vez que en la consola aparezca `Started FraudeApplication in ... seconds`:
 * Abre tu navegador e ingresa a: **[http://localhost:8080](http://localhost:8080)**
-* Se mostrará la pantalla de inicio de sesión. Inicia con las credenciales de administrador o cliente indicadas arriba.
+* Se mostrará la pantalla de inicio de sesión. Inicia sesión con uno de los usuarios de prueba definidos en `UsuarioStore`.
 
 ---
 
@@ -151,26 +154,52 @@ Una vez que en la consola aparezca `Started FraudeApplication in ... seconds`:
 
 ## 🌐 Catálogo de APIs REST (Clean Endpoints)
 
-Todas las APIs siguen el estándar RESTful con responsabilidad única y versionado `/api/v1/`:
+Todas las APIs requieren una sesión autenticada y siguen el estándar RESTful con responsabilidad única y versionado `/api/v1/`:
 
-| Método | Endpoint | Descripción / Función |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/evaluation` | Evalúa una transacción contra las 8 reglas y guarda el resultado. |
-| `GET` | `/api/v1/evaluation` | Obtiene el historial completo de evaluaciones registradas. |
-| `DELETE` | `/api/v1/evaluation` | Limpia el historial de evaluaciones en memoria. |
-| `GET` | `/api/v1/metric` | Retorna los KPIs consolidados (Total, Aprobadas, Monitoreo, Bloqueadas, Score Promedio). |
-| `GET` | `/api/v1/metric/summary?days={n}` | Retorna el balance contable (`Saldo = Base + Ingresos - Egresos`) del periodo. |
-| `GET` | `/api/v1/metric/movement?days={n}` | Provee la serie temporal de ingresos/egresos para el gráfico *Chart.js*. |
-| `GET` | `/api/v1/metric/recent?days={n}` | Devuelve los movimientos recientes sincronizados para la tabla del dashboard. |
-| `GET` | `/api/v1/rule` | Devuelve la lista canónica de reglas antifraude con sus pesos y condiciones. |
-| `GET` | `/api/v1/report/export` | Genera y descarga el reporte de auditoría en formato **CSV**. |
+| Método | Endpoint | Descripción / Función | Roles permitidos |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/evaluation` | Evalúa una transacción contra las 8 reglas y guarda el resultado. | `ADMIN`, `CLIENTE` |
+| `GET` | `/api/v1/evaluation` | Obtiene el historial completo de evaluaciones registradas. | `ADMIN`, `ANALISTA` |
+| `DELETE` | `/api/v1/evaluation` | Limpia el historial de evaluaciones en memoria. | `ADMIN` |
+| `GET` | `/api/v1/metric` | Retorna los KPIs consolidados (Total, Aprobadas, Monitoreo, Bloqueadas, Score Promedio). | `ADMIN`, `ANALISTA` |
+| `GET` | `/api/v1/metric/summary?days={n}` | Retorna el balance contable (`Saldo = Base + Ingresos - Egresos`) del periodo. | `ADMIN`, `ANALISTA` |
+| `GET` | `/api/v1/metric/movement?days={n}` | Provee la serie temporal de ingresos/egresos para el gráfico *Chart.js*. | `ADMIN`, `ANALISTA` |
+| `GET` | `/api/v1/metric/recent?days={n}` | Devuelve los movimientos recientes sincronizados para la tabla del dashboard. | `ADMIN`, `ANALISTA` |
+| `GET` | `/api/v1/rule` | Devuelve la lista canónica de reglas antifraude con sus pesos y condiciones. | `ADMIN`, `ANALISTA` |
+| `GET` | `/api/v1/report/export` | Genera y descarga el reporte de auditoría en formato **CSV**. | `ADMIN`, `ANALISTA` |
+
+### 🔒 Control de acceso
+
+* Sin sesión, cualquier ruta `/api/**` responde `401` con `{"error":"No autenticado"}`.
+* Un rol sin permiso recibe `403` con `{"error":"No autorizado"}`.
+* Las peticiones a páginas sin sesión redirigen a `/login`; un cliente que intenta abrir una página administrativa es redirigido a `/operacion`.
+
+| Rol | Páginas permitidas |
+| :--- | :--- |
+| `ADMIN` | Todas |
+| `ANALISTA` | `/`, `/simulador`, `/transacciones`, `/reglas`, `/reportes` |
+| `CLIENTE` | `/operacion` |
+
+> **Nota:** el rol `ANALISTA` ya está contemplado por el interceptor, pero el usuario semilla `analista` conserva el rol `ADMIN` hasta completar la separación de roles.
+
+### 📡 Códigos de respuesta de la API
+
+| Código | Situación |
+| :---: | :--- |
+| `200` | Operación correcta con cuerpo de respuesta. |
+| `204` | Eliminación correcta (`DELETE /api/v1/evaluation`). |
+| `401` | Petición `/api/**` sin sesión autenticada. |
+| `403` | Sesión válida con un rol sin permiso para el recurso o método. |
 
 ---
 
 ## 👥 Tecnologías Utilizadas
 
 * **Lenguaje:** Java 21 LTS
-* **Framework:** Spring Boot 3.x (Spring Web, Spring MVC, Spring Data JPA, Bean Validation)
+* **Framework:** Spring Boot 4.1.1 (Spring Web MVC + Thymeleaf)
+* **Seguridad:** Spring Security Crypto (BCrypt) para el almacenamiento de credenciales
+* **Persistencia:** En memoria mediante stores concurrentes; entidades anotadas con Jakarta Persistence API (JPA no activo)
+* **Utilidades:** Lombok, Spring Boot DevTools
 * **Motor de Plantillas:** Thymeleaf
 * **Frontend:** HTML5 semántico, CSS3 personalizado, Bootstrap 5.3, Bootstrap Icons
 * **Gráficos & Visualización:** Chart.js 4.4, SVG dinámico

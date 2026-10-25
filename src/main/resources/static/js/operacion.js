@@ -24,12 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const res = await fetch('/api/v1/evaluation', {
+            const res = await window.fetchConSesion('/api/v1/evaluation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
+            if (!res.ok) throw new Error('Error en el servidor: ' + res.status);
             const data = await res.json();
             resultadoDiv.classList.remove('d-none');
 

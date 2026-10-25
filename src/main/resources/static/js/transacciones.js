@@ -31,15 +31,21 @@
     if (btnReset) {
         btnReset.addEventListener('click', async () => {
             if (confirm('¿Deseas reiniciar el historial de transacciones evaluadas?')) {
-                await fetch('/api/v1/evaluation', { method: 'DELETE' });
-                window.location.reload();
+                try {
+                    const res = await window.fetchConSesion('/api/v1/evaluation', { method: 'DELETE' });
+                    if (res.ok) {
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    // 401/403 ya se notifican en fetchConSesion.
+                }
             }
         });
     }
 
     async function sincronizarKpisYTabla() {
         try {
-            const resKpis = await fetch('/api/v1/evaluation/kpis');
+            const resKpis = await window.fetchConSesion('/api/v1/evaluation/kpis');
             if (resKpis.ok) {
                 const k = await resKpis.json();
                 const elTotal = document.getElementById('kpiTotal');
