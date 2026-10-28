@@ -34,15 +34,17 @@ public class LoginController {
     public String postLogin(@RequestParam String usuario, @RequestParam String clave,
                             HttpSession session, HttpServletRequest request, Model model) {
         if (authService.validar(usuario, clave)) {
-            // Previene fijación de sesión: se renueva el identificador tras autenticar.
+            // Evita session fixation: se renueva el identificador de sesión tras autenticar.
             request.changeSessionId();
 
             String rol = authService.obtenerRol(usuario);
             String nombre = authService.obtenerNombreUsuario(usuario);
+            String codigoCliente = authService.obtenerCodigoCliente(usuario);
 
             session.setAttribute("usuario", usuario);
             session.setAttribute("nombreUsuario", nombre);
             session.setAttribute("rol", rol);
+            session.setAttribute("codigoCliente", codigoCliente);
 
             if ("CLIENTE".equals(rol)) {
                 return "redirect:/operacion";

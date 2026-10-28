@@ -1,6 +1,7 @@
 package com.lambdashield.fraude.model.store;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -10,28 +11,34 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class UsuarioStore {
 
-    public record UsuarioInfo(String usuario, String clave, String nombreCompleto, String rol) {}
+    /**
+     * @param clave hash BCrypt de la contraseña (nunca la clave en texto plano)
+     * @param codigoCliente código del cliente asociado (solo rol CLIENTE)
+     */
+    public record UsuarioInfo(String usuario, String clave, String nombreCompleto, String rol, String codigoCliente) {}
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final Map<String, UsuarioInfo> usuarios = new ConcurrentHashMap<>();
 
     public UsuarioStore() {
-        // Las claves se almacenan únicamente como hash BCrypt en memoria.
-        // Los usuarios y claves semilla se mantienen igual para las pruebas.
-        usuarios.put("admin", new UsuarioInfo("admin", passwordEncoder.encode("lambda2026"), "Administrador del Sistema", "ADMIN"));
-        usuarios.put("analista", new UsuarioInfo("analista", passwordEncoder.encode("fraude123"), "Analista Antifraude", "ADMIN"));
+        // Administrador con acceso completo a monitoreo, reglas, gráficas y reportes
+        usuarios.put("admin", crearUsuario("admin", "lambda2026", "Administrador del Sistema", "ADMIN", null));
+
+        // Analista antifraude: acceso de solo lectura a las páginas de administración
+        usuarios.put("analista", crearUsuario("analista", "fraude123", "Analista Antifraude", "ANALISTA", null));
 
         // Usuario estándar (cliente de banca digital que realiza transacciones)
-        usuarios.put("usuario", new UsuarioInfo("usuario", passwordEncoder.encode("cliente123"), "María Fernández (Cliente)", "CLIENTE"));
-        usuarios.put("maria", new UsuarioInfo("maria", passwordEncoder.encode("123456"), "María Fernández (Cliente)", "CLIENTE"));
-        usuarios.put("cliente", new UsuarioInfo("cliente", passwordEncoder.encode("cliente123"), "María Fernández (Cliente)", "CLIENTE"));
+        usuarios.put("usuario", crearUsuario("usuario", "cliente123", "María Fernández (Cliente)", "CLIENTE", "C-001"));
+        usuarios.put("maria", crearUsuario("maria", "123456", "María Fernández (Cliente)", "CLIENTE", "C-001"));
+        usuarios.put("cliente", crearUsuario("cliente", "cliente123", "María Fernández (Cliente)", "CLIENTE", "C-001"));
+    }
+
+    private UsuarioInfo crearUsuario(String usuario, String clavePlano, String nombreCompleto, String rol, String codigoCliente) {
+        return new UsuarioInfo(usuario, passwordEncoder.encode(clavePlano), nombreCompleto, rol, codigoCliente);
     }
 
     public Optional<UsuarioInfo> validar(String usuario, String clave) {
-        if (usuario == null || clave == null) {
-            return Optional.empty();
-        }
-        UsuarioInfo info = usuarios.get(usuario);
+        UsuarioInfo info = usuario == null || clave == null ? null : usuarios.get(usuario);
         if (info != null && passwordEncoder.matches(clave, info.clave())) {
             return Optional.of(info);
         }
@@ -39,6 +46,6 @@ public class UsuarioStore {
     }
 
     public Optional<UsuarioInfo> buscarPorUsuario(String usuario) {
-        return Optional.ofNullable(usuarios.get(usuario));
+        return usuario == null ? Optional.empty() : Optional.ofNullable(usuarios.get(usuario));
     }
 }

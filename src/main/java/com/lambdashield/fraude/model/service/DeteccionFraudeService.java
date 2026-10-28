@@ -40,7 +40,7 @@ public class DeteccionFraudeService {
         return switch (nivel) {
             case "bajo" -> "Aprobada";
             case "medio" -> "Monitoreo";
-            case "alto" -> "Revisión manual";
+            case "alto" -> "Retener / Alertar";
             default -> "Bloqueada";
         };
     }

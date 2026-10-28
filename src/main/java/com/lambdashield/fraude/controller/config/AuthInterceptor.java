@@ -3,136 +3,138 @@ package com.lambdashield.fraude.controller.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
 
+/**
+ * Interceptor de sesión y autorización.
+ *
+ * Reglas:
+ *  - Sin sesión: las rutas /api/** responden 401 JSON y las páginas redirigen a /login.
+ *  - CLIENTE: solo POST /api/v1/evaluation y la página /operacion. El resto de /api/** → 403 JSON.
+ *  - ANALISTA: solo lectura (GET) de /api/** y páginas de administración. Nada de POST/DELETE.
+ *  - ADMIN: acceso total, incluido DELETE /api/v1/evaluation.
+ */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
-    private static final String ROL_ADMIN = "ADMIN";
-    private static final String ROL_ANALISTA = "ANALISTA";
     private static final String ROL_CLIENTE = "CLIENTE";
-
-    private static final String RUTA_OPERACION = "/operacion";
-    private static final String RUTA_EVALUACION = "/api/v1/evaluation";
-
-    /** Rutas HTML a las que puede acceder un cliente. */
-    private static final Set<String> PAGINAS_CLIENTE = Set.of(RUTA_OPERACION);
-
-    /** Rutas HTML de administración (analistas y administradores). */
-    private static final Set<String> PAGINAS_ADMIN = Set.of(
-            "/", "/simulador", "/transacciones", "/reglas", "/reportes");
+    private static final String ROL_ANALISTA = "ANALISTA";
+    private static final String ROL_ADMIN = "ADMIN";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String uri = request.getRequestURI();
+        String uri = obtenerRuta(request);
 
         // Recursos estáticos y rutas públicas
-        if (uri.startsWith("/login") || uri.startsWith("/css/") || uri.startsWith("/js/")
-                || uri.startsWith("/img/") || uri.startsWith("/error") || uri.startsWith("/logout")) {
+        if (esRecursoPublico(uri)) {
             return true;
         }
 
-        boolean api = esApi(uri);
         HttpSession session = request.getSession(false);
-        boolean autenticado = session != null && session.getAttribute("usuario") != null;
-
-        if (!autenticado) {
-            if (api) {
-                return responderJson(response, HttpServletResponse.SC_UNAUTHORIZED, "No autenticado");
+        if (session == null || session.getAttribute("usuario") == null) {
+            if (esRutaApi(uri)) {
+                return rechazar(response, HttpServletResponse.SC_UNAUTHORIZED, "No autenticado");
             }
-            return redirigir(response, "/login");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return false;
         }
 
         String rol = (String) session.getAttribute("rol");
 
+        if (esRutaApi(uri)) {
+            return autorizarApi(request, response, rol, uri);
+        }
+        return autorizarPagina(request, response, rol, uri);
+    }
+
+    private String obtenerRuta(HttpServletRequest request) {
+        String uri = request.getRequestURI().substring(request.getContextPath().length());
+        int puntoYComa = uri.indexOf(';');
+        return puntoYComa >= 0 ? uri.substring(0, puntoYComa) : uri;
+    }
+
+    private boolean esRecursoPublico(String uri) {
+        return uri.startsWith("/login") || uri.startsWith("/logout")
+                || uri.startsWith("/css/") || uri.startsWith("/js/")
+                || uri.startsWith("/img/") || uri.startsWith("/error");
+    }
+
+    private boolean esRutaApi(String uri) {
+        return uri.equals("/api") || uri.startsWith("/api/");
+    }
+
+    private boolean autorizarApi(HttpServletRequest request, HttpServletResponse response,
+                                 String rol, String uri) throws IOException {
         if (ROL_ADMIN.equals(rol)) {
             return true;
         }
 
-        if (ROL_CLIENTE.equals(rol)) {
-            if (api) {
-                if (puedeClienteApi(uri, request.getMethod())) {
-                    return true;
-                }
-                return responderJson(response, HttpServletResponse.SC_FORBIDDEN, "No autorizado");
-            }
-            if (coincideRuta(uri, PAGINAS_CLIENTE)) {
+        if (ROL_ANALISTA.equals(rol)) {
+            // Lectura de todo el catálogo de APIs, sin modificaciones.
+            if (HttpMethod.GET.matches(request.getMethod())) {
                 return true;
             }
-            return redirigir(response, RUTA_OPERACION);
+            return rechazar(response, HttpServletResponse.SC_FORBIDDEN, "No autorizado");
+        }
+
+        if (ROL_CLIENTE.equals(rol)) {
+            // El cliente solo puede evaluar sus propias operaciones.
+            if (HttpMethod.POST.matches(request.getMethod()) && uri.equals("/api/v1/evaluation")) {
+                return true;
+            }
+            return rechazar(response, HttpServletResponse.SC_FORBIDDEN, "No autorizado");
+        }
+
+        return rechazar(response, HttpServletResponse.SC_FORBIDDEN, "No autorizado");
+    }
+
+    private boolean autorizarPagina(HttpServletRequest request, HttpServletResponse response,
+                                    String rol, String uri) throws IOException {
+        if (ROL_ADMIN.equals(rol)) {
+            return true;
         }
 
         if (ROL_ANALISTA.equals(rol)) {
-            if (api) {
-                if (puedeAnalistaApi(uri, request.getMethod())) {
-                    return true;
-                }
-                return responderJson(response, HttpServletResponse.SC_FORBIDDEN, "No autorizado");
+            // El analista ve las páginas de administración, pero no el portal del cliente
+            // ni el simulador (su única acción es POST, que le está prohibida).
+            if (esPaginaCliente(uri) || esPaginaSimulador(uri)) {
+                response.sendRedirect(request.getContextPath() + "/");
+                return false;
             }
-            if (coincideRuta(uri, PAGINAS_ADMIN)) {
+            return true;
+        }
+
+        if (ROL_CLIENTE.equals(rol)) {
+            if (esPaginaCliente(uri)) {
                 return true;
             }
-            return redirigir(response, "/");
-        }
-
-        // Rol desconocido: se deniega el acceso.
-        if (api) {
-            return responderJson(response, HttpServletResponse.SC_FORBIDDEN, "No autorizado");
-        }
-        response.sendError(HttpServletResponse.SC_FORBIDDEN);
-        return false;
-    }
-
-    /** El cliente solo puede evaluar transacciones desde su propio portal. */
-    private boolean puedeClienteApi(String uri, String metodo) {
-        return "POST".equalsIgnoreCase(metodo) && RUTA_EVALUACION.equals(normalizar(uri));
-    }
-
-    /** El analista solo puede consultar (GET/HEAD) los recursos de monitoreo. */
-    private boolean puedeAnalistaApi(String uri, String metodo) {
-        if (!"GET".equalsIgnoreCase(metodo) && !"HEAD".equalsIgnoreCase(metodo)) {
+            response.sendRedirect(request.getContextPath() + "/operacion");
             return false;
         }
-        String ruta = normalizar(uri);
-        return (ruta.equals(RUTA_EVALUACION) || ruta.startsWith(RUTA_EVALUACION + "/"))
-                || ruta.equals("/api/v1/metric") || ruta.startsWith("/api/v1/metric/")
-                || ruta.equals("/api/v1/rule") || ruta.startsWith("/api/v1/rule/")
-                || ruta.equals("/api/v1/report") || ruta.startsWith("/api/v1/report/");
-    }
 
-    private boolean esApi(String uri) {
-        return uri.equals("/api") || uri.startsWith("/api/");
-    }
-
-    private boolean coincideRuta(String uri, Set<String> rutasPermitidas) {
-        String ruta = normalizar(uri);
-        return rutasPermitidas.contains(ruta)
-                || rutasPermitidas.stream().anyMatch(p -> !p.equals("/") && ruta.startsWith(p + "/"));
-    }
-
-    private String normalizar(String uri) {
-        if (uri.length() > 1 && uri.endsWith("/")) {
-            return uri.substring(0, uri.length() - 1);
-        }
-        return uri;
-    }
-
-    private boolean redirigir(HttpServletResponse response, String destino) throws IOException {
-        response.sendRedirect(destino);
+        response.sendRedirect(request.getContextPath() + "/login");
         return false;
     }
 
-    private boolean responderJson(HttpServletResponse response, int estado, String mensaje) throws IOException {
+    private boolean esPaginaCliente(String uri) {
+        return uri.equals("/operacion") || uri.startsWith("/operacion/");
+    }
+
+    private boolean esPaginaSimulador(String uri) {
+        return uri.equals("/simulador") || uri.startsWith("/simulador/");
+    }
+
+    private boolean rechazar(HttpServletResponse response, int estado, String mensaje) throws IOException {
         response.setStatus(estado);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"error\":\"" + mensaje + "\"}");
-        response.getWriter().flush();
         return false;
     }
 }

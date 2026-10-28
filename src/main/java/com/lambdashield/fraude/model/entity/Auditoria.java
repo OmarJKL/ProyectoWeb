@@ -1,6 +1,8 @@
 package com.lambdashield.fraude.model.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.*;
 import java.time.OffsetDateTime;
 
@@ -29,13 +31,16 @@ public class Auditoria {
     @Column(name = "accion", nullable = false, length = 40)
     private String accion;
 
-    @Column(name = "datos_anteriores", columnDefinition = "text")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "datos_anteriores", columnDefinition = "jsonb")
     private String datosAnteriores;
 
-    @Column(name = "datos_nuevos", columnDefinition = "text")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "datos_nuevos", columnDefinition = "jsonb")
     private String datosNuevos;
 
-    @Column(name = "direccion_ip", length = 45)
+    @JdbcTypeCode(SqlTypes.OTHER)
+    @Column(name = "direccion_ip", columnDefinition = "inet")
     private String direccionIp;
 
     @Column(name = "fecha_evento", nullable = false)

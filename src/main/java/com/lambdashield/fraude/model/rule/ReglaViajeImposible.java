@@ -15,13 +15,10 @@ public class ReglaViajeImposible implements ReglaEvaluable {
 
         if (("alto_riesgo".equals(pais) || "regional".equals(pais)) && operaciones >= 2) {
             return new FactorResponse("viaje_imposible", "RF007 · Viaje imposible", max, max,
-                    "Distancia geográfica vs tiempo excede umbral físico: operaciones registradas en <1h desde ubicaciones incompatibles.");
+                    "Heurística país + frecuencia: operaciones en <1h desde una jurisdicción regional o de alto riesgo (aproximación sin geolocalización real).");
         } else if ("alto_riesgo".equals(pais) && ipNueva) {
             return new FactorResponse("viaje_imposible", "RF007 · Viaje imposible", 28, max,
-                    "Conexión remota inmediata desde IP no habitual en jurisdicción de alto riesgo (posible proxy/VPN o viaje imposible).");
-        } else if ("casino".equalsIgnoreCase(tr.categoria()) || "cripto".equalsIgnoreCase(tr.categoria())) {
-            return new FactorResponse("viaje_imposible", "RF007 · Viaje imposible", 15, max,
-                    "Operación en comercio de liquidación inmediata transfronteriza sin validación de presencia física.");
+                    "Conexión remota desde IP no habitual en jurisdicción de alto riesgo (posible proxy/VPN; aproximación sin geolocalización real).");
         }
 
         return new FactorResponse("viaje_imposible", "RF007 · Viaje imposible", 0, max,

@@ -28,9 +28,56 @@ public class TransaccionService {
     }
 
     public EvaluacionResponse crearYEvaluar(TransaccionCrearRequest request) {
-        ClienteStore.ClienteInfo clienteInfo = clienteStore.buscar(request.cliente());
-        double promedio = clienteInfo != null ? clienteInfo.promedioGasto() : 100.0;
-        String nombreCliente = clienteInfo != null ? clienteInfo.nombre() : request.cliente();
+        ClienteStore.ClienteInfo clienteInfo = obtenerCliente(request.cliente());
+        return crearYEvaluar(request, LocalDateTime.now(), clienteInfo);
+    }
+
+    /**
+     * Evaluación para el portal del cliente: hora, frecuencia, dispositivo e IP
+     * se derivan en el servidor y no se confía en los valores del body.
+     */
+    public EvaluacionResponse crearYEvaluarCliente(TransaccionCrearRequest request, String codigoCliente,
+                                                   String userAgent, String ipRemota) {
+        ClienteStore.ClienteInfo clienteInfo = obtenerCliente(codigoCliente);
+        LocalDateTime fechaHora = LocalDateTime.now();
+
+        int operacionesUltimaHora = evaluacionStore.contarOperacionesUltimaHora(
+                codigoCliente, fechaHora.minusHours(1));
+
+        String dispositivo = clienteStore.esDispositivoConocido(codigoCliente, userAgent)
+                ? "reconocido"
+                : "nuevo";
+        String ip = clienteStore.esIpConocida(codigoCliente, ipRemota)
+                ? "conocida"
+                : "nueva";
+
+        TransaccionCrearRequest derivada = new TransaccionCrearRequest(
+                codigoCliente,
+                request.monto(),
+                request.categoria(),
+                fechaHora.getHour(),
+                request.pais(),
+                dispositivo,
+                operacionesUltimaHora,
+                request.beneficiario(),
+                ip
+        );
+
+        return crearYEvaluar(derivada, fechaHora, clienteInfo);
+    }
+
+    private ClienteStore.ClienteInfo obtenerCliente(String codigoCliente) {
+        ClienteStore.ClienteInfo clienteInfo = clienteStore.buscar(codigoCliente);
+        if (clienteInfo == null) {
+            throw new ClienteNoEncontradoException(codigoCliente);
+        }
+        return clienteInfo;
+    }
+
+    private EvaluacionResponse crearYEvaluar(TransaccionCrearRequest request, LocalDateTime fechaHora,
+                                             ClienteStore.ClienteInfo clienteInfo) {
+        double promedio = clienteInfo.promedioGasto();
+        String nombreCliente = clienteInfo.nombre();
 
         List<FactorResponse> factores = deteccionFraudeService.evaluar(request, promedio);
         int puntaje = deteccionFraudeService.calcularPuntajeTotal(factores);
@@ -38,11 +85,12 @@ public class TransaccionService {
         String estado = deteccionFraudeService.determinarEstado(nivel);
         String icono = deteccionFraudeService.obtenerIconoEstado(nivel);
         String color = deteccionFraudeService.obtenerColorNivel(nivel);
-        String fecha = LocalDateTime.now().format(FORMATTER);
+        String fecha = fechaHora.format(FORMATTER);
         String id = evaluacionStore.generarId();
 
         EvaluacionResponse response = new EvaluacionResponse(
                 id,
+                request.cliente(),
                 nombreCliente,
                 request.monto(),
                 request.categoria(),
@@ -54,6 +102,7 @@ public class TransaccionService {
                 icono,
                 color,
                 fecha,
+                fechaHora,
                 factores
         );
 
@@ -65,8 +114,8 @@ public class TransaccionService {
         return evaluacionStore.listarTodas();
     }
 
-    public List<EvaluacionResponse> listarPorCliente(String clienteNombre) {
-        return evaluacionStore.listarPorCliente(clienteNombre);
+    public List<EvaluacionResponse> listarPorClienteCodigo(String codigoCliente) {
+        return evaluacionStore.listarPorClienteCodigo(codigoCliente);
     }
 
     public KpisResponse calcularKpis() {

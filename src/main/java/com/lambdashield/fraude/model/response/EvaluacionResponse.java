@@ -1,9 +1,11 @@
 package com.lambdashield.fraude.model.response;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record EvaluacionResponse(
     String id,
+    String clienteCodigo,
     String clienteNombre,
     double monto,
     String categoria,
@@ -15,5 +17,6 @@ public record EvaluacionResponse(
     String iconoEstado,
     String colorNivel,
     String fecha,
+    LocalDateTime fechaHora,
     List<FactorResponse> factores
 ) {}

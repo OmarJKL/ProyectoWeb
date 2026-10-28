@@ -23,8 +23,8 @@ public class CasoFraude {
     @Column(name = "codigo_caso", nullable = false, unique = true)
     private UUID codigoCaso;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_alerta", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_alerta", nullable = false, unique = true)
     private AlertaFraude alerta;
 
     @ManyToOne(fetch = FetchType.LAZY)

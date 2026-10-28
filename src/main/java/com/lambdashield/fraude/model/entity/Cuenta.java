@@ -3,6 +3,8 @@ package com.lambdashield.fraude.model.entity;
 import com.lambdashield.fraude.model.enums.EstadoCuenta;
 import com.lambdashield.fraude.model.enums.TipoCuenta;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,7 +34,8 @@ public class Cuenta {
     @Column(name = "tipo_cuenta", nullable = false, length = 30)
     private TipoCuenta tipoCuenta;
 
-    @Column(name = "codigo_moneda", nullable = false, length = 3)
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "codigo_moneda", nullable = false, columnDefinition = "char(3)", length = 3)
     private String codigoMoneda;
 
     @Column(name = "saldo_disponible", nullable = false, precision = 18, scale = 2)

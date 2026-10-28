@@ -3,6 +3,10 @@ package com.lambdashield.fraude.controller.api;
 import com.lambdashield.fraude.model.request.TransaccionCrearRequest;
 import com.lambdashield.fraude.model.response.EvaluacionResponse;
 import com.lambdashield.fraude.model.service.TransaccionService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +35,23 @@ public class EvaluationApiController {
 
     /** Evalúa una transacción con el motor antifraude y la registra. */
     @PostMapping
-    public ResponseEntity<EvaluacionResponse> evaluate(@RequestBody TransaccionCrearRequest request) {
+    public ResponseEntity<EvaluacionResponse> evaluate(@Valid @RequestBody TransaccionCrearRequest request,
+                                                       HttpSession session,
+                                                       HttpServletRequest httpRequest) {
+        // Un cliente no puede declarar sus propios factores: se derivan en el servidor.
+        if ("CLIENTE".equals(session.getAttribute("rol"))) {
+            String codigoCliente = (String) session.getAttribute("codigoCliente");
+            if (codigoCliente == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.ok(transaccionService.crearYEvaluarCliente(
+                    request,
+                    codigoCliente,
+                    httpRequest.getHeader("User-Agent"),
+                    httpRequest.getRemoteAddr()));
+        }
+
+        // El simulador del administrador conserva los valores manuales para pruebas.
         return ResponseEntity.ok(transaccionService.crearYEvaluar(request));
     }
 

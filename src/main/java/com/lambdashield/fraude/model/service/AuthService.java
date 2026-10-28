@@ -32,4 +32,10 @@ public class AuthService {
                 .map(UsuarioStore.UsuarioInfo::rol)
                 .orElse("CLIENTE");
     }
+
+    public String obtenerCodigoCliente(String usuario) {
+        return usuarioStore.buscarPorUsuario(usuario)
+                .map(UsuarioStore.UsuarioInfo::codigoCliente)
+                .orElse(null);
+    }
 }

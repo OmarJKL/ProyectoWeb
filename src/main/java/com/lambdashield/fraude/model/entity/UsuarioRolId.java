@@ -8,5 +8,5 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class UsuarioRolId implements Serializable {
     private Long usuario;
-    private Integer rol;
+    private Short rol;
 }

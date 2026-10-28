@@ -38,7 +38,7 @@ public class EvaluacionFraude {
     @Column(name = "es_posible_fraude", nullable = false)
     private boolean esPosibleFraude;
 
-    @Column(name = "modelo_utilizado", length = 100)
+    @Column(name = "modelo_utilizado", length = 40)
     private String modeloUtilizado;
 
     @Column(name = "version_modelo", length = 40)

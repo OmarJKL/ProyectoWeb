@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadAndRenderChart(rangeDays) {
         try {
-            const res = await window.fetchConSesion('/api/v1/metric/movement?days=' + rangeDays);
+            const res = await LSApi.fetch('/api/v1/metric/movement?days=' + rangeDays);
             if (!res.ok) return;
             const data = await res.json();
             const labels = data.map(d => d.fecha);
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadAndRenderSummary(rangeDays) {
         try {
-            const res = await window.fetchConSesion('/api/v1/metric/summary?days=' + rangeDays);
+            const res = await LSApi.fetch('/api/v1/metric/summary?days=' + rangeDays);
             if (!res.ok) return;
             const data = await res.json();
 
@@ -110,26 +110,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadAndRenderTable(rangeDays) {
         try {
-            const res = await window.fetchConSesion('/api/v1/metric/recent?days=' + rangeDays);
+            const res = await LSApi.fetch('/api/v1/metric/recent?days=' + rangeDays);
             if (!res.ok) return;
             const movimientos = await res.json();
             const tbody = document.getElementById("transactionsTableBody");
             if (!tbody || !Array.isArray(movimientos)) return;
 
-            tbody.innerHTML = movimientos.map(mov => `
-                <tr>
-                    <td>${mov.fecha}</td>
-                    <td>${mov.descripcion}</td>
-                    <td>
-                        <span class="lambda-badge ${mov.esIngreso ? 'lambda-badge--ingreso' : 'lambda-badge--egreso'}">
-                            ${mov.esIngreso ? 'Ingreso' : 'Egreso'}
-                        </span>
-                    </td>
-                    <td class="text-end ${mov.esIngreso ? 'lambda-amount--positive' : 'lambda-amount--negative'}">
-                        ${mov.esIngreso ? '+ ' : '- '}S/ ${mov.monto.toLocaleString('es-PE')}
-                    </td>
-                </tr>
-            `).join('');
+            const filas = movimientos.map(mov => {
+                const tr = document.createElement('tr');
+
+                const tdFecha = document.createElement('td');
+                tdFecha.textContent = mov.fecha;
+
+                const tdDescripcion = document.createElement('td');
+                tdDescripcion.textContent = mov.descripcion;
+
+                const tdTipo = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = 'lambda-badge ' + (mov.esIngreso ? 'lambda-badge--ingreso' : 'lambda-badge--egreso');
+                badge.textContent = mov.esIngreso ? 'Ingreso' : 'Egreso';
+                tdTipo.appendChild(badge);
+
+                const tdMonto = document.createElement('td');
+                tdMonto.className = 'text-end ' + (mov.esIngreso ? 'lambda-amount--positive' : 'lambda-amount--negative');
+                tdMonto.textContent = `${mov.esIngreso ? '+ ' : '- '}S/ ${Number(mov.monto).toLocaleString('es-PE')}`;
+
+                tr.append(tdFecha, tdDescripcion, tdTipo, tdMonto);
+                return tr;
+            });
+            tbody.replaceChildren(...filas);
         } catch (err) {
             console.error("Error al actualizar tabla:", err);
         }

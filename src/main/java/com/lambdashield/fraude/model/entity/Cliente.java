@@ -22,10 +22,10 @@ public class Cliente {
     @Column(name = "tipo_documento", nullable = false, length = 20)
     private String tipoDocumento;
 
-    @Column(name = "numero_documento", nullable = false, unique = true, length = 30)
+    @Column(name = "numero_documento", nullable = false, length = 30)
     private String numeroDocumento;
 
-    @Column(name = "nombres", nullable = false, length = 100)
+    @Column(name = "nombres", length = 100)
     private String nombres;
 
     @Column(name = "apellido_paterno", length = 100)
@@ -40,23 +40,23 @@ public class Cliente {
     @Column(name = "correo_electronico", length = 150)
     private String correoElectronico;
 
-    @Column(name = "numero_telefono", length = 30)
+    @Column(name = "num", length = 30)
     private String numeroTelefono;
 
-    @Column(name = "codigo_pais_residencia", length = 2)
+    // Campos sin columna en el esquema PostgreSQL (se mantienen en memoria)
+    @Transient
     private String codigoPaisResidencia;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "nivel_riesgo_cliente", nullable = false, length = 20)
+    @Transient
     private NivelRiesgo nivelRiesgoCliente;
 
-    @Column(name = "es_activo", nullable = false)
+    @Transient
     private boolean esActivo;
 
-    @Column(name = "fecha_creacion", nullable = false)
+    @Transient
     private OffsetDateTime fechaCreacion;
 
-    @Column(name = "fecha_actualizacion")
+    @Transient
     private OffsetDateTime fechaActualizacion;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)

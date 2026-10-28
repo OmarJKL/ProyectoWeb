@@ -5,26 +5,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!form) return;
 
+    function crearLineaRecibo(etiqueta, valor) {
+        const linea = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = etiqueta;
+        linea.append(strong, document.createTextNode(' ' + valor));
+        return linea;
+    }
+
+    function pintarReciboAprobado(data) {
+        const alerta = document.createElement('div');
+        alerta.className = 'alert alert-success p-3 rounded';
+        alerta.style.borderLeft = '5px solid #146c2e';
+
+        const cabecera = document.createElement('div');
+        cabecera.className = 'd-flex align-items-center gap-2 mb-2';
+        const icono = document.createElement('i');
+        icono.className = 'bi bi-check-circle-fill fs-4 text-success';
+        const titulo = document.createElement('strong');
+        titulo.className = 'fs-5';
+        titulo.textContent = '¡Transferencia Exitosa!';
+        cabecera.append(icono, titulo);
+
+        const mensaje = document.createElement('p');
+        mensaje.className = 'mb-2 small text-secondary';
+        mensaje.textContent = 'Tu dinero ha sido transferido correctamente al destinatario.';
+
+        const detalle = document.createElement('div');
+        detalle.className = 'p-2 rounded bg-white border small dato-mono text-dark';
+        detalle.append(
+            crearLineaRecibo('N° Operación:', data.id),
+            crearLineaRecibo('Monto:', 'S/ ' + Number(data.monto).toFixed(2)),
+            crearLineaRecibo('Fecha y Hora:', data.fecha),
+            crearLineaRecibo('Estado:', 'Aprobada')
+        );
+
+        alerta.append(cabecera, mensaje, detalle);
+        resultadoDiv.replaceChildren(alerta);
+    }
+
+    function pintarReciboRevision(data) {
+        const alerta = document.createElement('div');
+        alerta.className = 'alert alert-danger p-3 rounded';
+        alerta.style.borderLeft = '5px solid var(--utp-rojo)';
+
+        const cabecera = document.createElement('div');
+        cabecera.className = 'd-flex align-items-center gap-2 mb-2';
+        const icono = document.createElement('i');
+        icono.className = 'bi bi-shield-x fs-4 text-danger';
+        const titulo = document.createElement('strong');
+        titulo.className = 'fs-5';
+        titulo.textContent = 'Operación en Validación Preventiva';
+        cabecera.append(icono, titulo);
+
+        const mensaje = document.createElement('p');
+        mensaje.className = 'mb-2 small';
+        mensaje.style.color = 'var(--utp-rojo-oscuro)';
+        mensaje.textContent = 'Hemos detectado parámetros atípicos en esta operación (monto inusual o canal no reconocido). Por tu seguridad, la transferencia ha sido pausada temporalmente para revisión de identidad.';
+
+        const detalle = document.createElement('div');
+        detalle.className = 'p-2 rounded bg-white border small dato-mono text-dark';
+        detalle.append(
+            crearLineaRecibo('Código de Incidencia:', data.id),
+            crearLineaRecibo('Estado:', 'Retenida en revisión'),
+            crearLineaRecibo('Soporte:', 'Comunícate al 0800-LAMBDA si fuiste tú quien solicitó el movimiento.')
+        );
+
+        alerta.append(cabecera, mensaje, detalle);
+        resultadoDiv.replaceChildren(alerta);
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         btnTransferir.disabled = true;
-        btnTransferir.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando con motor antifraude...';
+        const spinner = document.createElement('span');
+        spinner.className = 'spinner-border spinner-border-sm';
+        btnTransferir.replaceChildren(spinner, document.createTextNode(' Verificando con motor antifraude...'));
 
         const payload = {
             cliente: document.getElementById('trCliente').value,
             monto: Number(document.getElementById('trMonto').value) || 0,
             categoria: document.getElementById('trCategoria').value,
-            hora: Number(document.getElementById('trHora').value) || 12,
+            // Valores de relleno válidos: el servidor deriva hora, frecuencia,
+            // dispositivo e IP para usuarios con rol CLIENTE.
+            hora: new Date().getHours(),
             pais: document.getElementById('trPais').value,
-            dispositivo: document.getElementById('trDispositivo').value,
-            operacionesUltimaHora: Number(document.getElementById('trVelocidad').value) || 1,
+            dispositivo: 'reconocido',
+            operacionesUltimaHora: 1,
             beneficiario: document.getElementById('trBeneficiario').value,
-            ip: document.getElementById('trIp').value
+            ip: 'conocida'
         };
 
         try {
-            const res = await window.fetchConSesion('/api/v1/evaluation', {
+            const res = await LSApi.fetch('/api/v1/evaluation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -35,39 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
             resultadoDiv.classList.remove('d-none');
 
             if (data.nivel === 'bajo' || data.nivel === 'medio') {
-                resultadoDiv.innerHTML = `
-                    <div class="alert alert-success p-3 rounded" style="border-left: 5px solid #146c2e;">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-check-circle-fill fs-4 text-success"></i>
-                            <strong class="fs-5">¡Transferencia Exitosa!</strong>
-                        </div>
-                        <p class="mb-2 small text-secondary">Tu dinero ha sido transferido correctamente al destinatario.</p>
-                        <div class="p-2 rounded bg-white border small dato-mono text-dark">
-                            <div><strong>N° Operación:</strong> ` + data.id + `</div>
-                            <div><strong>Monto:</strong> S/ ` + data.monto.toFixed(2) + `</div>
-                            <div><strong>Fecha y Hora:</strong> ` + data.fecha + `</div>
-                            <div><strong>Estado:</strong> Aprobada</div>
-                        </div>
-                    </div>
-                `;
+                pintarReciboAprobado(data);
             } else {
-                resultadoDiv.innerHTML = `
-                    <div class="alert alert-danger p-3 rounded" style="border-left: 5px solid var(--utp-rojo);">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-shield-x fs-4 text-danger"></i>
-                            <strong class="fs-5">Operación en Validación Preventiva</strong>
-                        </div>
-                        <p class="mb-2 small" style="color: var(--utp-rojo-oscuro);">
-                            Hemos detectado parámetros atípicos en esta operación (monto inusual o canal no reconocido).
-                            Por tu seguridad, la transferencia ha sido pausada temporalmente para revisión de identidad.
-                        </p>
-                        <div class="p-2 rounded bg-white border small dato-mono text-dark">
-                            <div><strong>Código de Incidencia:</strong> ` + data.id + `</div>
-                            <div><strong>Estado:</strong> Retenida en revisión</div>
-                            <div><strong>Soporte:</strong> Comunícate al 0800-LAMBDA si fuiste tú quien solicitó el movimiento.</div>
-                        </div>
-                    </div>
-                `;
+                pintarReciboRevision(data);
             }
 
             // 1. Quitar fila vacía si existe
@@ -78,9 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 2. Crear nueva fila dinámica
                 const esAprobada = (data.nivel === 'bajo' || data.nivel === 'medio');
-                const badgeHtml = esAprobada
-                    ? '<span class="badge bg-success py-1 px-2"><i class="bi bi-check-circle-fill"></i> Procesada con éxito</span>'
-                    : '<span class="badge bg-danger py-1 px-2"><i class="bi bi-shield-exclamation"></i> En validación preventiva</span>';
 
                 const diccCat = {
                     servicios: 'Servicios',
@@ -92,16 +133,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 const catTexto = diccCat[payload.categoria] || payload.categoria;
 
+                const tdId = document.createElement('td');
+                tdId.className = 'dato-mono fw-bold';
+                tdId.textContent = data.id;
+
+                const tdFecha = document.createElement('td');
+                tdFecha.textContent = data.fecha;
+
+                const tdMonto = document.createElement('td');
+                tdMonto.className = 'dato-mono fw-bold';
+                tdMonto.textContent = 'S/ ' + Number(data.monto).toFixed(2);
+
+                const tdCategoria = document.createElement('td');
+                tdCategoria.textContent = catTexto;
+
+                const tdEstado = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = esAprobada ? 'badge bg-success py-1 px-2' : 'badge bg-danger py-1 px-2';
+                const iconoBadge = document.createElement('i');
+                iconoBadge.className = esAprobada ? 'bi bi-check-circle-fill' : 'bi bi-shield-exclamation';
+                badge.append(iconoBadge, document.createTextNode(esAprobada ? ' Procesada con éxito' : ' En validación preventiva'));
+                tdEstado.appendChild(badge);
+
                 const nuevaFila = document.createElement('tr');
                 nuevaFila.style.backgroundColor = 'rgba(200, 16, 46, 0.08)';
                 nuevaFila.style.transition = 'background-color 1.5s ease';
-                nuevaFila.innerHTML = `
-                    <td class="dato-mono fw-bold">${data.id}</td>
-                    <td>${data.fecha}</td>
-                    <td class="dato-mono fw-bold">S/ ${data.monto.toFixed(2)}</td>
-                    <td>${catTexto}</td>
-                    <td>${badgeHtml}</td>
-                `;
+                nuevaFila.append(tdId, tdFecha, tdMonto, tdCategoria, tdEstado);
                 tablaOperaciones.prepend(nuevaFila);
                 setTimeout(() => nuevaFila.style.backgroundColor = 'transparent', 1500);
 
@@ -125,7 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Ocurrió un error al procesar la transferencia.');
         } finally {
             btnTransferir.disabled = false;
-            btnTransferir.innerHTML = '<i class="bi bi-shield-lock"></i> Confirmar y Realizar Transferencia';
+            const iconoBoton = document.createElement('i');
+            iconoBoton.className = 'bi bi-shield-lock';
+            btnTransferir.replaceChildren(iconoBoton, document.createTextNode(' Confirmar y Realizar Transferencia'));
         }
     });
 });

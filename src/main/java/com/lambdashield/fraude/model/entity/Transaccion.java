@@ -2,6 +2,8 @@ package com.lambdashield.fraude.model.entity;
 
 import com.lambdashield.fraude.model.enums.EstadoTransaccion;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -46,7 +48,8 @@ public class Transaccion {
     @Column(name = "monto_transaccion", nullable = false, precision = 18, scale = 2)
     private BigDecimal montoTransaccion;
 
-    @Column(name = "codigo_moneda", nullable = false, length = 3)
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "codigo_moneda", nullable = false, columnDefinition = "char(3)", length = 3)
     private String codigoMoneda;
 
     @Column(name = "fecha_hora_transaccion", nullable = false)
@@ -58,10 +61,12 @@ public class Transaccion {
     @Column(name = "saldo_posterior", precision = 18, scale = 2)
     private BigDecimal saldoPosterior;
 
-    @Column(name = "direccion_ip", length = 45)
+    @JdbcTypeCode(SqlTypes.OTHER)
+    @Column(name = "direccion_ip", columnDefinition = "inet")
     private String direccionIp;
 
-    @Column(name = "codigo_pais", length = 2)
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "codigo_pais", columnDefinition = "char(2)", length = 2)
     private String codigoPais;
 
     @Column(name = "ciudad", length = 100)

@@ -1,5 +1,6 @@
 package com.lambdashield.fraude.controller.view;
 
+import com.lambdashield.fraude.model.response.EvaluacionResponse;
 import com.lambdashield.fraude.model.service.TransaccionService;
 import com.lambdashield.fraude.model.store.ClienteStore;
 import jakarta.servlet.http.HttpSession;
@@ -22,20 +23,22 @@ public class OperacionClienteController {
 
     @GetMapping("/operacion")
     public String operacion(HttpSession session, Model model) {
-        String usuario = (String) session.getAttribute("usuario");
+        // El cliente se toma siempre de la sesión autenticada, nunca de un valor fijo.
+        String codigoCliente = (String) session.getAttribute("codigoCliente");
         String nombreUsuario = (String) session.getAttribute("nombreUsuario");
 
-        // Datos del cliente en sesión (por defecto María Fernández C-001)
-        ClienteStore.ClienteInfo cliente = clienteStore.buscar("C-001");
+        ClienteStore.ClienteInfo cliente = codigoCliente != null ? clienteStore.buscar(codigoCliente) : null;
 
         model.addAttribute("cliente", cliente);
+        model.addAttribute("codigoCliente", codigoCliente);
         model.addAttribute("nombreUsuario", nombreUsuario != null ? nombreUsuario : "Cliente");
         model.addAttribute("rol", session.getAttribute("rol"));
         model.addAttribute("saldo", 4850.00); // Saldo simulado del cliente
-        List<com.lambdashield.fraude.model.response.EvaluacionResponse> misTx = transaccionService.listarPorCliente("María");
-        if (misTx.isEmpty()) {
-            misTx = transaccionService.listarTodas();
-        }
+
+        // Solo las operaciones del cliente autenticado. Sin resultados: lista vacía (nunca las de otros).
+        List<EvaluacionResponse> misTx = codigoCliente != null
+                ? transaccionService.listarPorClienteCodigo(codigoCliente)
+                : List.of();
         model.addAttribute("transacciones", misTx);
 
         return "cliente/operacion";

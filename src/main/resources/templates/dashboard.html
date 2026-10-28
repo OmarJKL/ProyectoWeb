@@ -100,7 +100,7 @@
         </div>
 
         <div class="row g-4 justify-content-center pb-5">
-            <div class="col-md-6 col-lg-3">
+            <div class="col-md-6 col-lg-3" th:if="${session.rol == 'ADMIN'}">
                 <div class="tarjeta-ls tarjeta-modulo h-100">
                     <div class="p-4 text-center">
                         <i class="bi bi-sliders fs-1" style="color: var(--utp-rojo);"></i>
@@ -148,7 +148,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <script th:src="@{/js/panel.js}"></script>
     <script th:src="@{/js/auth.js}"></script>
+    <script th:src="@{/js/panel.js}"></script>
 </body>
 </html>

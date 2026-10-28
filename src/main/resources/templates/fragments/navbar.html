@@ -5,26 +5,14 @@
         <a class="navbar-brand fw-bold" th:href="${session.rol == 'CLIENTE'} ? @{/operacion} : @{/}">
             <i class="bi bi-shield-lock-fill text-danger"></i> LAMBDA SHIELD
         </a>
-
-        <!-- BOTÓN HAMBURGUESA -->
-        <button class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarPrincipal"
-            aria-controls="navbarPrincipal"
-            aria-expanded="false"
-            aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-                
-        <div class="collapse navbar-collapse" id="navbarPrincipal">
+        <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto ms-4">
                 <!-- Enlaces para el Administrador / Analista -->
                 <th:block th:if="${session.rol != 'CLIENTE'}">
                     <li class="nav-item">
                         <a class="nav-link" th:classappend="${paginaActiva == 'inicio' ? 'active' : ''}" th:href="@{/}">Inicio</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" th:if="${session.rol == 'ADMIN'}">
                         <a class="nav-link" th:classappend="${paginaActiva == 'simulador' ? 'active' : ''}" th:href="@{/simulador}">Simulador</a>
                     </li>
                     <li class="nav-item">
@@ -50,11 +38,11 @@
                 </th:block>
             </ul>
 
-            <div class="d-flex align-items-center gap-3 flex-column flex-lg-row">
+            <div class="d-flex align-items-center gap-3">
                 <span class="text-secondary small d-none d-md-inline" th:if="${session.nombreUsuario != null}">
                     <span class="badge me-1"
                           th:classappend="${session.rol == 'CLIENTE' ? 'bg-secondary' : 'bg-danger'}"
-                          th:text="${session.rol == 'CLIENTE' ? 'Cliente' : 'Administrador'}">Admin</span>
+                          th:text="${session.rol == 'CLIENTE' ? 'Cliente' : (session.rol == 'ANALISTA' ? 'Analista' : 'Administrador')}">Admin</span>
                     <span th:text="${session.nombreUsuario}">Usuario</span>
                 </span>
                 <a th:href="@{/logout}" class="btn btn-secundario btn-sm" id="btnCerrarSesion">

@@ -2,6 +2,8 @@ package com.lambdashield.fraude.model.entity;
 
 import com.lambdashield.fraude.model.enums.NivelRiesgo;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -34,7 +36,8 @@ public class ReglaFraude {
     @Column(name = "peso", nullable = false, precision = 5, scale = 2)
     private BigDecimal peso;
 
-    @Column(name = "parametros_json", columnDefinition = "text")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "parametros_json", columnDefinition = "jsonb")
     private String parametrosJson;
 
     @Column(name = "version_regla", nullable = false)

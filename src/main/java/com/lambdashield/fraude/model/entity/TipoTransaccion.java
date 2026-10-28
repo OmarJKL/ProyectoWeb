@@ -14,7 +14,7 @@ public class TipoTransaccion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_tipo_transaccion")
-    private Integer idTipoTransaccion;
+    private Short idTipoTransaccion;
 
     @Column(name = "codigo_tipo", nullable = false, unique = true, length = 40)
     private String codigoTipo;

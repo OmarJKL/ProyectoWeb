@@ -32,12 +32,12 @@
         btnReset.addEventListener('click', async () => {
             if (confirm('¿Deseas reiniciar el historial de transacciones evaluadas?')) {
                 try {
-                    const res = await window.fetchConSesion('/api/v1/evaluation', { method: 'DELETE' });
+                    const res = await LSApi.fetch('/api/v1/evaluation', { method: 'DELETE' });
                     if (res.ok) {
                         window.location.reload();
                     }
                 } catch (e) {
-                    // 401/403 ya se notifican en fetchConSesion.
+                    // LSApi ya mostró el aviso de permisos o redirigió por sesión expirada.
                 }
             }
         });
@@ -45,7 +45,7 @@
 
     async function sincronizarKpisYTabla() {
         try {
-            const resKpis = await window.fetchConSesion('/api/v1/evaluation/kpis');
+            const resKpis = await LSApi.fetch('/api/v1/metric');
             if (resKpis.ok) {
                 const k = await resKpis.json();
                 const elTotal = document.getElementById('kpiTotal');

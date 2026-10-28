@@ -323,9 +323,12 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .lambda-stat-delta--down { color: var(--utp-rojo); background: var(--utp-rojo-brillo); }
 
 /* ============ Tarjetas de módulo (Simulador / Transacciones / Reglas) ============ */
+.tarjeta-modulo {
+    /* Sin transformaciones en hover: evita saltos o cambios de tamaño. */
+    transition: box-shadow .2s ease;
+}
+
 .tarjeta-modulo:hover {
-    transform: translateY(-3px);
-    transition: transform .15s ease, box-shadow .15s ease;
     box-shadow: 0 10px 25px rgba(17, 17, 17, 0.08);
 }
 

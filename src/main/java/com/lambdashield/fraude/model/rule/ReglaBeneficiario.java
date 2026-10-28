@@ -17,9 +17,10 @@ public class ReglaBeneficiario implements ReglaEvaluable {
         if (esNuevo && tr.monto() > umbral) {
             return new FactorResponse("beneficiario", "RF008 · Beneficiario nuevo + monto alto", max, max,
                     String.format(Locale.US, "Nuevo destinatario con monto elevado (S/ %.2f > umbral S/ %.2f).", tr.monto(), umbral));
-        } else if (esNuevo) {
-            return new FactorResponse("beneficiario", "RF008 · Beneficiario nuevo + monto alto", 10, max,
-                    "Nuevo destinatario, pero monto dentro del rango operativo moderado.");
+        }
+        if (esNuevo) {
+            return new FactorResponse("beneficiario", "RF008 · Beneficiario nuevo + monto alto", 0, max,
+                    "Nuevo destinatario, pero monto dentro del rango operativo moderado (sin puntaje).");
         }
         return new FactorResponse("beneficiario", "RF008 · Beneficiario nuevo + monto alto", 0, max,
                 "Destinatario recurrente previamente validado.");

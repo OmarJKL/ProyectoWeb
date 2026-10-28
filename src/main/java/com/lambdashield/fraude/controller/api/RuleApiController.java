@@ -25,7 +25,7 @@ public class RuleApiController {
      */
     public static final List<ReglaResponse> RULES = List.of(
             new ReglaResponse("RF001", "Unusual Amount",
-                    "Condition: amount > 5x average_30d. Penalizes operations that drastically exceed the holder's historical consumption.",
+                    "Gradual score by amount / average_30d ratio: ≤1.5x = 0; >1.5x and ≤3x = 5–15; >3x and <5x = 15–22; ≥5x = 25. Penalizes operations that drastically exceed the holder's historical consumption.",
                     25),
             new ReglaResponse("RF002", "New Device",
                     "Condition: is_new_device = true. Detects access from phones or browsers without a previously registered fingerprint.",
@@ -37,16 +37,16 @@ public class RuleApiController {
                     "Condition: is_new_country = true. Penalizes transfers or operations originating from infrequent countries or jurisdictions.",
                     30),
             new ReglaResponse("RF005", "Unusual Hours",
-                    "Condition: is_unusual_hour = true. The early morning window (00:00–05:00) concentrates higher probabilistic risk.",
+                    "Condition: is_unusual_hour = true. Only the early morning window (00:00–04:59) scores; the rest of the day scores 0.",
                     10),
             new ReglaResponse("RF006", "High Frequency",
-                    "Condition: transactions_last_hour > 5. Fast bursts of operations typical of cloning or card testing.",
+                    "Gradual score by transactions_last_hour: ≤1 = 0; 2–3 = 5–12; 4–5 = 15–20; >5 = 25. Fast bursts of operations typical of cloning or card testing.",
                     25),
             new ReglaResponse("RF007", "Impossible Travel",
-                    "Condition: distance / time exceeds physical threshold. Detects geographic jumps incompatible within short intervals.",
+                    "Simplified heuristic based on country, transaction frequency, and IP (approximation pending real geolocation).",
                     40),
             new ReglaResponse("RF008", "New Beneficiary + High Amount",
-                    "Condition: new_beneficiary && amount > threshold. Recipient with no history associated with a high transfer amount.",
+                    "Condition: new_beneficiary && amount > threshold. Scores 0 when the beneficiary is not new or the amount is not high.",
                     20)
     );
 

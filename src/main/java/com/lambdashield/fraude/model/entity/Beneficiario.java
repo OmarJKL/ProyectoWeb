@@ -1,6 +1,8 @@
 package com.lambdashield.fraude.model.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.*;
 import java.time.OffsetDateTime;
 
@@ -29,7 +31,8 @@ public class Beneficiario {
     @Column(name = "numero_cuenta_destino", length = 50)
     private String numeroCuentaDestino;
 
-    @Column(name = "codigo_pais", length = 2)
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "codigo_pais", columnDefinition = "char(2)", length = 2)
     private String codigoPais;
 
     @Column(name = "es_conocido", nullable = false)

@@ -13,7 +13,7 @@ public class Canal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_canal")
-    private Integer idCanal;
+    private Short idCanal;
 
     @Column(name = "codigo_canal", nullable = false, unique = true, length = 20)
     private String codigoCanal;
@@ -21,6 +21,6 @@ public class Canal {
     @Column(name = "nombre_canal", nullable = false, length = 100)
     private String nombreCanal;
 
-    @Column(name = "es_activo", nullable = false)
-    private boolean esActivo;
+    @Column(name = "es_activo")
+    private Boolean esActivo;
 }

@@ -11,7 +11,7 @@
     const ESTADO_POR_NIVEL = {
         bajo:    { texto: 'Aprobada',        icono: 'bi-check-circle-fill', color: 'var(--riesgo-bajo)' },
         medio:   { texto: 'Monitoreo',       icono: 'bi-eye-fill',          color: 'var(--riesgo-medio)' },
-        alto:    { texto: 'Revisión manual', icono: 'bi-flag-fill',         color: 'var(--riesgo-alto)' },
+        alto:    { texto: 'Retener / Alertar', icono: 'bi-flag-fill',         color: 'var(--riesgo-alto)' },
         critico: { texto: 'Bloqueada',       icono: 'bi-x-octagon-fill',    color: 'var(--riesgo-critico)' },
     };
 
@@ -45,7 +45,7 @@
 
     async function enviarYEvaluar(datos) {
         try {
-            const res = await window.fetchConSesion('/api/v1/evaluation', {
+            const res = await LSApi.fetch('/api/v1/evaluation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -82,49 +82,101 @@
         insigniaNivel.style.color = meta.color;
         insigniaNivel.style.border = `1px solid ${meta.color}`;
 
-        textoVeredicto.innerHTML = `<i class="bi ${desc.icono}" style="color:${desc.color}"></i> ${desc.texto} · ${id}`;
+        textoVeredicto.replaceChildren();
+        const iconoVeredicto = document.createElement('i');
+        iconoVeredicto.className = `bi ${desc.icono}`;
+        iconoVeredicto.style.color = desc.color;
+        textoVeredicto.append(iconoVeredicto, document.createTextNode(` ${desc.texto} · ${id}`));
 
-        contenedorRadar.innerHTML = construirRadarSVG(factores);
-        listaFactores.innerHTML = factores.map(construirFactorHTML).join('');
+        contenedorRadar.replaceChildren(construirRadarSVG(factores));
+        listaFactores.replaceChildren(...factores.map(construirFactorElemento));
     }
 
-    function construirFactorHTML(f) {
-        const porcentaje = Math.round((f.puntaje / f.max) * 100);
+    function construirFactorElemento(f) {
+        const porcentaje = f.max > 0 ? Math.round((f.puntaje / f.max) * 100) : 0;
         let colorBarra = 'var(--riesgo-bajo)';
         if (porcentaje >= 45) colorBarra = 'var(--riesgo-alto)';
         if (porcentaje >= 75) colorBarra = 'var(--riesgo-critico)';
 
-        return `
-            <div class="col-md-6">
-                <div class="item-factor">
-                    <div class="d-flex justify-content-between mb-1" style="font-size: 0.85rem; color: var(--texto-principal);">
-                        <span>${f.etiqueta}</span>
-                        <strong class="dato-mono">${f.puntaje}/${f.max}</strong>
-                    </div>
-                    <div class="barra-factor"><span style="width:${porcentaje}%; background:${colorBarra}"></span></div>
-                    <div class="text-secondary mt-1" style="font-size: 0.75rem; line-height: 1.3;">${f.motivo}</div>
-                </div>
-            </div>`;
+        const columna = document.createElement('div');
+        columna.className = 'col-md-6';
+
+        const item = document.createElement('div');
+        item.className = 'item-factor';
+
+        const cabecera = document.createElement('div');
+        cabecera.className = 'd-flex justify-content-between mb-1';
+        cabecera.style.fontSize = '0.85rem';
+        cabecera.style.color = 'var(--texto-principal)';
+
+        const etiqueta = document.createElement('span');
+        etiqueta.textContent = f.etiqueta;
+
+        const puntaje = document.createElement('strong');
+        puntaje.className = 'dato-mono';
+        puntaje.textContent = `${f.puntaje}/${f.max}`;
+
+        cabecera.append(etiqueta, puntaje);
+
+        const barra = document.createElement('div');
+        barra.className = 'barra-factor';
+        const relleno = document.createElement('span');
+        relleno.style.width = `${porcentaje}%`;
+        relleno.style.background = colorBarra;
+        barra.appendChild(relleno);
+
+        const motivo = document.createElement('div');
+        motivo.className = 'text-secondary mt-1';
+        motivo.style.fontSize = '0.75rem';
+        motivo.style.lineHeight = '1.3';
+        motivo.textContent = f.motivo;
+
+        item.append(cabecera, barra, motivo);
+        columna.appendChild(item);
+        return columna;
     }
 
     function construirRadarSVG(factores) {
-        const size = 240, center = size / 2, radius = 84, n = factores.length;
+        const size = 240, center = size / 2, radius = 84, n = Math.max(1, factores.length);
+        const svgNS = 'http://www.w3.org/2000/svg';
         const puntoEnEje = (i, ratio) => {
             const angulo = (Math.PI * 2 * i) / n - Math.PI / 2;
             return [center + Math.cos(angulo) * radius * ratio, center + Math.sin(angulo) * radius * ratio];
         };
 
-        const anillos = [0.25, 0.5, 0.75, 1].map(r => {
-            const pts = factores.map((_, i) => puntoEnEje(i, r).join(',')).join(' ');
-            return `<polygon points="${pts}" fill="none" stroke="var(--borde-oscuro)" stroke-width="1"/>`;
-        }).join('');
+        const svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '240');
 
-        const ejes = factores.map((_, i) => {
+        [0.25, 0.5, 0.75, 1].forEach(r => {
+            const polygon = document.createElementNS(svgNS, 'polygon');
+            polygon.setAttribute('points', factores.map((_, i) => puntoEnEje(i, r).join(',')).join(' '));
+            polygon.setAttribute('fill', 'none');
+            polygon.setAttribute('stroke', 'var(--borde-oscuro)');
+            polygon.setAttribute('stroke-width', '1');
+            svg.appendChild(polygon);
+        });
+
+        factores.forEach((_, i) => {
             const [x, y] = puntoEnEje(i, 1);
-            return `<line x1="${center}" y1="${center}" x2="${x}" y2="${y}" stroke="var(--borde-oscuro)" stroke-width="1"/>`;
-        }).join('');
+            const line = document.createElementNS(svgNS, 'line');
+            line.setAttribute('x1', center);
+            line.setAttribute('y1', center);
+            line.setAttribute('x2', x);
+            line.setAttribute('y2', y);
+            line.setAttribute('stroke', 'var(--borde-oscuro)');
+            line.setAttribute('stroke-width', '1');
+            svg.appendChild(line);
+        });
 
-        const datoPts = factores.map((f, i) => puntoEnEje(i, f.max > 0 ? (f.puntaje / f.max) : 0).join(',')).join(' ');
+        const dato = document.createElementNS(svgNS, 'polygon');
+        dato.setAttribute('points', factores.map((f, i) => puntoEnEje(i, f.max > 0 ? (f.puntaje / f.max) : 0).join(',')).join(' '));
+        dato.setAttribute('fill', 'var(--utp-rojo-brillo)');
+        dato.setAttribute('stroke', 'var(--utp-rojo)');
+        dato.setAttribute('stroke-width', '2');
+        svg.appendChild(dato);
+
         const etiquetasCortas = {
             monto: 'Monto (RF1)',
             dispositivo: 'Disp. (RF2)',
@@ -137,18 +189,21 @@
             categoria: 'Rubro'
         };
 
-        const labels = factores.map((f, i) => {
+        factores.forEach((f, i) => {
             const [x, y] = puntoEnEje(i, 1.22);
-            return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="var(--texto-secundario)" font-family="system-ui">${etiquetasCortas[f.id] || f.etiqueta}</text>`;
-        }).join('');
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('font-size', '10');
+            text.setAttribute('fill', 'var(--texto-secundario)');
+            text.setAttribute('font-family', 'system-ui');
+            text.textContent = etiquetasCortas[f.id] || f.etiqueta;
+            svg.appendChild(text);
+        });
 
-        return `
-        <svg viewBox="0 0 ${size} ${size}" width="100%" height="240">
-            ${anillos}
-            ${ejes}
-            <polygon points="${datoPts}" fill="var(--utp-rojo-brillo)" stroke="var(--utp-rojo)" stroke-width="2"/>
-            ${labels}
-        </svg>`;
+        return svg;
     }
 
     function lanzarAlerta(registro) {
@@ -161,10 +216,19 @@
 
         const div = document.createElement('div');
         div.className = 'alerta-ls';
-        div.innerHTML = `
-            <strong class="d-block mb-1 text-danger" style="font-size: 0.9rem;"><i class="bi bi-shield-x"></i> Transacción Bloqueada</strong>
-            <span class="text-secondary small">${registro.id} · ${registro.clienteNombre} · S/ ${registro.monto.toFixed(2)} · Score: ${registro.puntaje}</span>
-        `;
+
+        const titulo = document.createElement('strong');
+        titulo.className = 'd-block mb-1 text-danger';
+        titulo.style.fontSize = '0.9rem';
+        const icono = document.createElement('i');
+        icono.className = 'bi bi-shield-x';
+        titulo.append(icono, document.createTextNode(' Transacción Bloqueada'));
+
+        const detalle = document.createElement('span');
+        detalle.className = 'text-secondary small';
+        detalle.textContent = `${registro.id} · ${registro.clienteNombre} · S/ ${Number(registro.monto).toFixed(2)} · Score: ${registro.puntaje}`;
+
+        div.append(titulo, detalle);
         contenedor.appendChild(div);
 
         setTimeout(() => {
@@ -197,13 +261,19 @@
         };
     }
 
+    function pintarBotonAuto(btn, icono, texto) {
+        const i = document.createElement('i');
+        i.className = `bi ${icono}`;
+        btn.replaceChildren(i, document.createTextNode(` ${texto}`));
+    }
+
     function alternarTraficoAutomatico() {
         const btn = $('#btnAuto');
         if (intervaloAutoId) {
             clearInterval(intervaloAutoId);
             intervaloAutoId = null;
             if (btn) {
-                btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> Iniciar tráfico automático';
+                pintarBotonAuto(btn, 'bi-lightning-charge-fill', 'Iniciar tráfico automático');
                 btn.classList.remove('btn-principal');
                 btn.classList.add('btn-secundario');
             }
@@ -215,7 +285,7 @@
         }, 1800);
 
         if (btn) {
-            btn.innerHTML = '<i class="bi bi-stop-circle-fill"></i> Detener tráfico automático';
+            pintarBotonAuto(btn, 'bi-stop-circle-fill', 'Detener tráfico automático');
             btn.classList.remove('btn-secundario');
             btn.classList.add('btn-principal');
         }

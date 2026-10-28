@@ -2,12 +2,11 @@ package com.lambdashield.fraude.model.repository;
 
 import com.lambdashield.fraude.model.entity.EvaluacionFraude;
 import com.lambdashield.fraude.model.entity.Transaccion;
+import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-// TODO: Extend JpaRepository<EvaluacionFraude, Long>
-public interface EvaluacionFraudeRepository {
+public interface EvaluacionFraudeRepository extends JpaRepository<EvaluacionFraude, Long> {
     List<EvaluacionFraude> findAll();
     Optional<EvaluacionFraude> findByTransaccion(Transaccion transaccion);
-    EvaluacionFraude save(EvaluacionFraude evaluacionFraude);
 }
