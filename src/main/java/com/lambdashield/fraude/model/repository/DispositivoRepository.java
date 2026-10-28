@@ -7,5 +7,7 @@ import java.util.Optional;
 
 public interface DispositivoRepository extends JpaRepository<Dispositivo, Long> {
     List<Dispositivo> findByCliente_IdCliente(Long idCliente);
+    List<Dispositivo> findByCliente_IdClienteAndEsConocidoTrue(Long idCliente);
     Optional<Dispositivo> findByHuellaDispositivo(String huella);
+    boolean existsByCliente_IdClienteAndEsConocidoTrueAndDireccionIp(Long idCliente, String direccionIp);
 }

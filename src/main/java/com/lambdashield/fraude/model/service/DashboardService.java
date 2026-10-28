@@ -4,7 +4,6 @@ import com.lambdashield.fraude.model.response.DashboardResponse;
 import com.lambdashield.fraude.model.response.EvaluacionResponse;
 import com.lambdashield.fraude.model.response.MovimientoDiarioResponse;
 import com.lambdashield.fraude.model.response.MovimientoRecienteResponse;
-import com.lambdashield.fraude.model.store.EvaluacionStore;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,7 +13,7 @@ import java.util.List;
 
 @Service
 public class DashboardService {
-    private final EvaluacionStore evaluacionStore;
+    private final TransaccionService transaccionService;
 
     private static final String[] DESCRIPCIONES = {
             "Pago de cliente", "Transferencia recibida", "Compra de insumos",
@@ -22,8 +21,8 @@ public class DashboardService {
             "Pago a proveedor", "Venta en tienda"
     };
 
-    public DashboardService(EvaluacionStore evaluacionStore) {
-        this.evaluacionStore = evaluacionStore;
+    public DashboardService(TransaccionService transaccionService) {
+        this.transaccionService = transaccionService;
     }
 
     public DashboardResponse obtenerResumen() {
@@ -78,7 +77,7 @@ public class DashboardService {
         }
 
         // Incorporar impacto de las operaciones de clientes evaluadas
-        List<EvaluacionResponse> transacciones = evaluacionStore.listarTodas();
+        List<EvaluacionResponse> transacciones = transaccionService.listarTodas();
         double egresosTransacciones = transacciones.stream()
                 .filter(t -> "bajo".equals(t.nivel()) || "medio".equals(t.nivel()))
                 .mapToDouble(EvaluacionResponse::monto)
@@ -126,7 +125,7 @@ public class DashboardService {
         LocalDate hoy = LocalDate.now();
 
         // 1. Incorporar operaciones reales evaluadas de los clientes
-        List<EvaluacionResponse> txs = evaluacionStore.listarTodas();
+        List<EvaluacionResponse> txs = transaccionService.listarTodas();
         int agregadosReales = 0;
         for (EvaluacionResponse tx : txs) {
             if (agregadosReales >= 4) break;

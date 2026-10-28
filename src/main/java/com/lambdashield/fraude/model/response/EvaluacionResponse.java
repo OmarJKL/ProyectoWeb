@@ -18,5 +18,6 @@ public record EvaluacionResponse(
     String colorNivel,
     String fecha,
     LocalDateTime fechaHora,
-    List<FactorResponse> factores
+    List<FactorResponse> factores,
+    Long idInterno
 ) {}

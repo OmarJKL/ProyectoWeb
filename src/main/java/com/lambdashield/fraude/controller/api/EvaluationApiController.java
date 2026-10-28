@@ -13,15 +13,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST Controller — CAPA CONTROLADOR
+ * REST Controller - CAPA CONTROLADOR
  *
  * Recurso: /api/v1/evaluation
  * Responsabilidad única: gestionar las evaluaciones antifraude.
  *
- * Cada método cumple exactamente una función:
- *   POST   → evaluar una transacción y guardarla
- *   GET    → listar todas las evaluaciones registradas
- *   DELETE → limpiar el historial de evaluaciones
+ *   POST       -> evaluar una transacción y guardarla
+ *   GET        -> listar las evaluaciones activas registradas
+ *   PATCH /{id} -> desactivar una evaluación (soft delete, sin borrar la fila)
+ *
+ * No existe DELETE: la baja lógica se realiza con PATCH /{id}.
  */
 @RestController
 @RequestMapping("/api/v1/evaluation")
@@ -55,16 +56,21 @@ public class EvaluationApiController {
         return ResponseEntity.ok(transaccionService.crearYEvaluar(request));
     }
 
-    /** Devuelve el historial completo de evaluaciones registradas. */
+    /** Devuelve el historial de evaluaciones activas. */
     @GetMapping
     public ResponseEntity<List<EvaluacionResponse>> list() {
         return ResponseEntity.ok(transaccionService.listarTodas());
     }
 
-    /** Limpia el historial de evaluaciones (reinicia el store). */
-    @DeleteMapping
-    public ResponseEntity<Void> clear() {
-        transaccionService.limpiarHistorial();
+    /**
+     * Baja lógica de una evaluación.
+     *
+     * La fila no se elimina: se marca es_activa = false y la transacción
+     * asociada pasa a REVERSADA.
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
+        transaccionService.desactivarEvaluacion(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface TransaccionRepository extends JpaRepository<Transaccion, Long> {
     List<Transaccion> findAll();
     Optional<Transaccion> findByCodigoTransaccion(UUID codigoTransaccion);
+    boolean existsByCuenta_Cliente_CodigoClienteAndDireccionIp(String codigoCliente, String direccionIp);
 }

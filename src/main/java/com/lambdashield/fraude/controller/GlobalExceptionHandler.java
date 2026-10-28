@@ -1,11 +1,13 @@
 package com.lambdashield.fraude.controller;
 
 import com.lambdashield.fraude.model.service.ClienteNoEncontradoException;
+import com.lambdashield.fraude.model.service.EvaluacionNoEncontradaException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,6 +38,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ClienteNoEncontradoException.class)
     public ResponseEntity<Map<String, List<String>>> handleClienteNoEncontrado(ClienteNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("errores", List.of(mensajeSeguro(ex))));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, List<String>>> handleMetodoNoSoportado(
+            HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(Map.of("errores", List.of("Método no permitido; use PATCH para la baja lógica")));
+    }
+
+    @ExceptionHandler(EvaluacionNoEncontradaException.class)
+    public ResponseEntity<Map<String, List<String>>> handleEvaluacionNoEncontrada(EvaluacionNoEncontradaException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("errores", List.of(mensajeSeguro(ex))));
     }

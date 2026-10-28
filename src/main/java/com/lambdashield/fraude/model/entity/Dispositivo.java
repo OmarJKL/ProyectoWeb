@@ -37,6 +37,9 @@ public class Dispositivo {
     @Column(name = "navegador", length = 50)
     private String navegador;
 
+    @Column(name = "direccion_ip", length = 45)
+    private String direccionIp;
+
     @Column(name = "es_conocido", nullable = false)
     private boolean esConocido;
 

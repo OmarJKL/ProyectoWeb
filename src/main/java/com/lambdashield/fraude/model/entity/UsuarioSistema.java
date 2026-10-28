@@ -38,4 +38,7 @@ public class UsuarioSistema {
 
     @Column(name = "fecha_creacion", nullable = false)
     private OffsetDateTime fechaCreacion;
+
+    @Column(name = "id_cliente")
+    private Long idCliente;
 }

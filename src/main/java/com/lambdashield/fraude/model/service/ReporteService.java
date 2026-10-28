@@ -1,7 +1,6 @@
 package com.lambdashield.fraude.model.service;
 
 import com.lambdashield.fraude.model.response.EvaluacionResponse;
-import com.lambdashield.fraude.model.store.EvaluacionStore;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -11,7 +10,7 @@ import java.util.Locale;
 @Service
 public class ReporteService {
 
-    private final EvaluacionStore evaluacionStore;
+    private final TransaccionService transaccionService;
 
     public record ResumenReporte(
             long total,
@@ -24,12 +23,12 @@ public class ReporteService {
             double tasaBloqueo
     ) {}
 
-    public ReporteService(EvaluacionStore evaluacionStore) {
-        this.evaluacionStore = evaluacionStore;
+    public ReporteService(TransaccionService transaccionService) {
+        this.transaccionService = transaccionService;
     }
 
     public ResumenReporte obtenerResumen() {
-        List<EvaluacionResponse> transacciones = evaluacionStore.listarTodas();
+        List<EvaluacionResponse> transacciones = transaccionService.listarTodas();
         long total = transacciones.size();
         long aprobadas = transacciones.stream().filter(t -> "bajo".equals(t.nivel())).count();
         long monitoreadas = transacciones.stream().filter(t -> "medio".equals(t.nivel())).count();
@@ -56,7 +55,7 @@ public class ReporteService {
     }
 
     public byte[] exportarTransaccionesCsv() {
-        List<EvaluacionResponse> transacciones = evaluacionStore.listarTodas();
+        List<EvaluacionResponse> transacciones = transaccionService.listarTodas();
         StringBuilder sb = new StringBuilder();
 
         // Encabezados CSV

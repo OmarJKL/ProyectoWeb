@@ -3,6 +3,7 @@ package com.lambdashield.fraude.model.entity;
 import com.lambdashield.fraude.model.enums.NivelRiesgo;
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -18,6 +19,9 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_cliente")
     private Long idCliente;
+
+    @Column(name = "codigo_cliente", nullable = false, unique = true, length = 20)
+    private String codigoCliente;
 
     @Column(name = "tipo_documento", nullable = false, length = 20)
     private String tipoDocumento;
@@ -43,15 +47,18 @@ public class Cliente {
     @Column(name = "num", length = 30)
     private String numeroTelefono;
 
-    // Campos sin columna en el esquema PostgreSQL (se mantienen en memoria)
+    @Column(name = "promedio_gasto", nullable = false, precision = 18, scale = 2)
+    private BigDecimal promedioGasto;
+
+    @Column(name = "es_activo", nullable = false)
+    private boolean esActivo;
+
+    // Campos calculados o de catálogo que no forman parte del esquema base.
     @Transient
     private String codigoPaisResidencia;
 
     @Transient
     private NivelRiesgo nivelRiesgoCliente;
-
-    @Transient
-    private boolean esActivo;
 
     @Transient
     private OffsetDateTime fechaCreacion;

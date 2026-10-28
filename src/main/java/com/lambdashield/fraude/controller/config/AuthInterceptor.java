@@ -17,8 +17,9 @@ import java.nio.charset.StandardCharsets;
  * Reglas:
  *  - Sin sesión: las rutas /api/** responden 401 JSON y las páginas redirigen a /login.
  *  - CLIENTE: solo POST /api/v1/evaluation y la página /operacion. El resto de /api/** → 403 JSON.
- *  - ANALISTA: solo lectura (GET) de /api/** y páginas de administración. Nada de POST/DELETE.
- *  - ADMIN: acceso total, incluido DELETE /api/v1/evaluation.
+ *  - ANALISTA: solo lectura (GET) de /api/** y páginas de administración. Nada de POST/PATCH.
+ *  - ADMIN: acceso total, incluido PATCH /api/v1/evaluation/{id}.
+ *  - DELETE no se permite en ninguna ruta: la baja lógica usa PATCH.
  */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
@@ -71,6 +72,12 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     private boolean autorizarApi(HttpServletRequest request, HttpServletResponse response,
                                  String rol, String uri) throws IOException {
+        // Política global: no se aceptan borrados físicos. La baja lógica usa PATCH.
+        if (HttpMethod.DELETE.matches(request.getMethod())) {
+            return rechazar(response, HttpServletResponse.SC_FORBIDDEN,
+                    "DELETE no permitido; use PATCH para desactivar");
+        }
+
         if (ROL_ADMIN.equals(rol)) {
             return true;
         }

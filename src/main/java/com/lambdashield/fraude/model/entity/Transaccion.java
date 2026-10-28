@@ -61,8 +61,7 @@ public class Transaccion {
     @Column(name = "saldo_posterior", precision = 18, scale = 2)
     private BigDecimal saldoPosterior;
 
-    @JdbcTypeCode(SqlTypes.OTHER)
-    @Column(name = "direccion_ip", columnDefinition = "inet")
+    @Column(name = "direccion_ip", length = 45)
     private String direccionIp;
 
     @JdbcTypeCode(SqlTypes.CHAR)

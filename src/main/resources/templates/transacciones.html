@@ -12,9 +12,9 @@
                 <h3 class="fw-bold mb-0">Historial de Operaciones</h3>
                 <p class="text-secondary small mb-0">Monitoreo y registro de las evaluaciones del motor.</p>
             </div>
-            <button class="btn btn-secundario" id="btnReset" th:if="${session.rol == 'ADMIN'}">
-                <i class="bi bi-arrow-counterclockwise"></i> Reiniciar Historial
-            </button>
+            <span class="text-secondary small" th:if="${session.rol == 'ADMIN'}">
+                <i class="bi bi-info-circle"></i> La baja es lógica: usa “Desactivar” en cada fila.
+            </span>
         </div>
 
         <!-- Indicadores de Rendimiento (KPIs Cuadrados Matemáticamente) -->
@@ -79,11 +79,12 @@
                             <th>Puntaje</th>
                             <th>Nivel</th>
                             <th>Estado</th>
+                            <th th:if="${session.rol == 'ADMIN'}">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaTransacciones">
                         <tr th:if="${#lists.isEmpty(transacciones)}" class="tr-vacia">
-                            <td colspan="9" class="text-center text-secondary py-5">No hay transacciones evaluadas en el historial.</td>
+                            <td th:colspan="${session.rol == 'ADMIN' ? 10 : 9}" class="text-center text-secondary py-5">No hay transacciones evaluadas en el historial.</td>
                         </tr>
                         <tr th:each="tx : ${transacciones}" th:data-nivel="${tx.nivel()}">
                             <td class="dato-mono fw-bold" th:text="${tx.id()}">TR-00001</td>
@@ -103,6 +104,13 @@
                                     <i class="bi" th:classappend="${tx.iconoEstado()}"></i>
                                     <span th:text="${tx.estado()}">Aprobada</span>
                                 </span>
+                            </td>
+                            <td th:if="${session.rol == 'ADMIN'}">
+                                <button type="button" class="btn btn-sm btn-secundario btn-soft-delete"
+                                        th:attr="data-id=${tx.idInterno()}"
+                                        th:disabled="${tx.idInterno() == null}">
+                                    <i class="bi bi-eye-slash"></i> Desactivar
+                                </button>
                             </td>
                         </tr>
                     </tbody>

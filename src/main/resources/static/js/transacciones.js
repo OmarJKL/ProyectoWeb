@@ -27,21 +27,26 @@
         });
     });
 
-    const btnReset = document.getElementById('btnReset');
-    if (btnReset) {
-        btnReset.addEventListener('click', async () => {
-            if (confirm('¿Deseas reiniciar el historial de transacciones evaluadas?')) {
-                try {
-                    const res = await LSApi.fetch('/api/v1/evaluation', { method: 'DELETE' });
-                    if (res.ok) {
-                        window.location.reload();
-                    }
-                } catch (e) {
-                    // LSApi ya mostró el aviso de permisos o redirigió por sesión expirada.
+    // Soft delete: se marca la evaluación como inactiva mediante PATCH.
+    document.querySelectorAll('.btn-soft-delete').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            if (!id) return;
+            if (!confirm('¿Desactivar esta evaluación? La fila se conservará en la base de datos como inactiva.')) {
+                return;
+            }
+            try {
+                const res = await LSApi.fetch('/api/v1/evaluation/' + encodeURIComponent(id), {
+                    method: 'PATCH'
+                });
+                if (res.ok) {
+                    window.location.reload();
                 }
+            } catch (e) {
+                // LSApi ya mostró el aviso de permisos o redirigió por sesión expirada.
             }
         });
-    }
+    });
 
     async function sincronizarKpisYTabla() {
         try {

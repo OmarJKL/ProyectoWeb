@@ -50,6 +50,12 @@ public class EvaluacionFraude {
     @Column(name = "duracion_ms")
     private Integer duracionMs;
 
+    @Column(name = "es_activa", nullable = false)
+    private boolean esActiva;
+
+    @Column(name = "fecha_desactivacion")
+    private OffsetDateTime fechaDesactivacion;
+
     @OneToMany(mappedBy = "evaluacion", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<EvaluacionRegla> reglasEvaluadas;

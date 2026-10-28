@@ -1,42 +1,22 @@
 package com.lambdashield.fraude.controller;
 
-import com.lambdashield.fraude.controller.api.EvaluationApiController;
-import com.lambdashield.fraude.controller.api.MetricApiController;
-import com.lambdashield.fraude.controller.api.ReportApiController;
-import com.lambdashield.fraude.controller.api.RuleApiController;
-import com.lambdashield.fraude.controller.config.AuthInterceptor;
-import com.lambdashield.fraude.controller.view.OperacionClienteController;
+import com.lambdashield.fraude.model.repository.EvaluacionFraudeRepository;
 import com.lambdashield.fraude.model.response.EvaluacionResponse;
-import com.lambdashield.fraude.model.rule.ReglaBeneficiario;
-import com.lambdashield.fraude.model.rule.ReglaDispositivo;
-import com.lambdashield.fraude.model.rule.ReglaHorario;
-import com.lambdashield.fraude.model.rule.ReglaIp;
-import com.lambdashield.fraude.model.rule.ReglaMontoInusual;
-import com.lambdashield.fraude.model.rule.ReglaUbicacion;
-import com.lambdashield.fraude.model.rule.ReglaVelocidad;
-import com.lambdashield.fraude.model.rule.ReglaViajeImposible;
-import com.lambdashield.fraude.model.service.DashboardService;
-import com.lambdashield.fraude.model.service.DeteccionFraudeService;
-import com.lambdashield.fraude.model.service.ReporteService;
-import com.lambdashield.fraude.model.service.TransaccionService;
-import com.lambdashield.fraude.model.store.ClienteStore;
-import com.lambdashield.fraude.model.store.EvaluacionStore;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,12 +24,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 /**
- * Pruebas MockMvc de autenticación, autorización por rol, validación y aislamiento
- * de datos del portal del cliente.
+ * Pruebas MockMvc de autenticación, autorización por rol, validación,
+ * soft delete con PATCH y aislamiento de datos del portal del cliente.
  *
- * Se usa un contexto standalone con los controllers, servicios y stores reales
- * para no depender de PostgreSQL (la aplicación usa stores en memoria).
+ * El contexto completo usa H2 en modo PostgreSQL y el DataInitializer real.
  */
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
 class SeguridadApiMockMvcTest {
 
     private static final String JSON_VALIDO = """
@@ -66,48 +48,22 @@ class SeguridadApiMockMvcTest {
             }
             """;
 
+    @Autowired
     private MockMvc mockMvc;
-    private MockHttpSession cliente;
-    private MockHttpSession analista;
-    private MockHttpSession admin;
 
-    @BeforeEach
-    void setUp() {
-        ClienteStore clienteStore = new ClienteStore();
-        EvaluacionStore evaluacionStore = new EvaluacionStore();
-        evaluacionStore.inicializarDatosPrueba();
+    @Autowired
+    private EvaluacionFraudeRepository evaluacionFraudeRepository;
 
-        DeteccionFraudeService deteccion = new DeteccionFraudeService(List.of(
-                new ReglaMontoInusual(),
-                new ReglaDispositivo(),
-                new ReglaIp(),
-                new ReglaUbicacion(),
-                new ReglaHorario(),
-                new ReglaVelocidad(),
-                new ReglaViajeImposible(),
-                new ReglaBeneficiario()
-        ));
-        TransaccionService transaccionService =
-                new TransaccionService(deteccion, evaluacionStore, clienteStore);
-        DashboardService dashboardService = new DashboardService(evaluacionStore);
-        ReporteService reporteService = new ReporteService(evaluacionStore);
+    private MockHttpSession cliente() {
+        return sesion("CLIENTE", "C-001");
+    }
 
-        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        mockMvc = MockMvcBuilders.standaloneSetup(
-                        new EvaluationApiController(transaccionService),
-                        new MetricApiController(transaccionService, dashboardService),
-                        new RuleApiController(),
-                        new ReportApiController(reporteService),
-                        new OperacionClienteController(clienteStore, transaccionService)
-                )
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .setValidator(new SpringValidatorAdapter(validator))
-                .addInterceptors(new AuthInterceptor())
-                .build();
+    private MockHttpSession analista() {
+        return sesion("ANALISTA", null);
+    }
 
-        cliente = sesion("CLIENTE", "C-001");
-        analista = sesion("ANALISTA", null);
-        admin = sesion("ADMIN", null);
+    private MockHttpSession admin() {
+        return sesion("ADMIN", null);
     }
 
     private static MockHttpSession sesion(String rol, String codigoCliente) {
@@ -135,28 +91,48 @@ class SeguridadApiMockMvcTest {
 
     @Test
     void clienteNoPuedeAccederAEndpointsDeAdministracion() throws Exception {
-        mockMvc.perform(get("/api/v1/metric").session(cliente))
+        mockMvc.perform(get("/api/v1/metric").session(cliente()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("No autorizado"));
 
-        mockMvc.perform(get("/api/v1/rule").session(cliente))
+        mockMvc.perform(get("/api/v1/rule").session(cliente()))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void analistaPuedeLeerPeroNoEliminar() throws Exception {
-        mockMvc.perform(get("/api/v1/rule").session(analista))
+    void analistaPuedeLeerPeroNoPuedeDesactivar() throws Exception {
+        mockMvc.perform(get("/api/v1/rule").session(analista()))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete("/api/v1/evaluation").session(analista))
+        Long id = evaluacionFraudeRepository.findByEsActivaTrueOrderByFechaEvaluacionDesc()
+                .getFirst().getIdEvaluacion();
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}", id).session(analista()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("No autorizado"));
     }
 
     @Test
-    void adminPuedeEliminarHistorial() throws Exception {
-        mockMvc.perform(delete("/api/v1/evaluation").session(admin))
+    void adminDesactivaEvaluacionConPatchSinBorrarla() throws Exception {
+        Long id = evaluacionFraudeRepository.findByEsActivaTrueOrderByFechaEvaluacionDesc()
+                .getFirst().getIdEvaluacion();
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}", id).session(admin()))
                 .andExpect(status().isNoContent());
+
+        assertThat(evaluacionFraudeRepository.findById(id))
+                .isPresent()
+                .get()
+                .extracting(e -> e.isEsActiva())
+                .isEqualTo(false);
+    }
+
+    @Test
+    void deleteNoEstaPermitidoNiParaAdmin() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .delete("/api/v1/evaluation").session(admin()))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.errores[0]").value("Método no permitido; use PATCH para la baja lógica"));
     }
 
     @Test
@@ -176,7 +152,7 @@ class SeguridadApiMockMvcTest {
                 """;
 
         mockMvc.perform(post("/api/v1/evaluation")
-                        .session(admin)
+                        .session(admin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalido))
                 .andExpect(status().isBadRequest())
@@ -190,7 +166,7 @@ class SeguridadApiMockMvcTest {
         String inexistente = JSON_VALIDO.replace("\"C-001\"", "\"C-999\"");
 
         mockMvc.perform(post("/api/v1/evaluation")
-                        .session(admin)
+                        .session(admin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(inexistente))
                 .andExpect(status().isNotFound())
@@ -199,7 +175,7 @@ class SeguridadApiMockMvcTest {
 
     @Test
     void operacionSoloMuestraTransaccionesDelClienteAutenticado() throws Exception {
-        MvcResult result = mockMvc.perform(get("/operacion").session(cliente))
+        MvcResult result = mockMvc.perform(get("/operacion").session(cliente()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("cliente/operacion"))
                 .andReturn();

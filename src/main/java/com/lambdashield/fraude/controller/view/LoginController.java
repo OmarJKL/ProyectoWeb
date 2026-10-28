@@ -33,20 +33,18 @@ public class LoginController {
     @PostMapping("/login")
     public String postLogin(@RequestParam String usuario, @RequestParam String clave,
                             HttpSession session, HttpServletRequest request, Model model) {
-        if (authService.validar(usuario, clave)) {
+        var autenticado = authService.autenticar(usuario, clave);
+        if (autenticado.isPresent()) {
             // Evita session fixation: se renueva el identificador de sesión tras autenticar.
             request.changeSessionId();
 
-            String rol = authService.obtenerRol(usuario);
-            String nombre = authService.obtenerNombreUsuario(usuario);
-            String codigoCliente = authService.obtenerCodigoCliente(usuario);
+            AuthService.UsuarioSesion info = autenticado.get();
+            session.setAttribute("usuario", info.usuario());
+            session.setAttribute("nombreUsuario", info.nombreCompleto());
+            session.setAttribute("rol", info.rol());
+            session.setAttribute("codigoCliente", info.codigoCliente());
 
-            session.setAttribute("usuario", usuario);
-            session.setAttribute("nombreUsuario", nombre);
-            session.setAttribute("rol", rol);
-            session.setAttribute("codigoCliente", codigoCliente);
-
-            if ("CLIENTE".equals(rol)) {
+            if ("CLIENTE".equals(info.rol())) {
                 return "redirect:/operacion";
             }
             return "redirect:/";

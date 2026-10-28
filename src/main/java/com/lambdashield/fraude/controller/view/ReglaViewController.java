@@ -1,23 +1,29 @@
 package com.lambdashield.fraude.controller.view;
 
-import com.lambdashield.fraude.controller.api.RuleApiController;
+import com.lambdashield.fraude.model.service.ReglaService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * MVC Controller — CAPA CONTROLADOR
+ * MVC Controller - CAPA CONTROLADOR
  *
  * Responsabilidad única: renderizar la vista HTML de reglas del motor.
- * Los datos de reglas provienen de RuleApiController (fuente de verdad).
+ * Los datos se obtienen de la tabla regla_fraude.
  */
 @Controller
 public class ReglaViewController {
 
+    private final ReglaService reglaService;
+
+    public ReglaViewController(ReglaService reglaService) {
+        this.reglaService = reglaService;
+    }
+
     @GetMapping("/reglas")
     public String reglas(HttpSession session, Model model) {
-        model.addAttribute("reglas", RuleApiController.RULES);
+        model.addAttribute("reglas", reglaService.listar());
         model.addAttribute("nombreUsuario", session.getAttribute("nombreUsuario"));
         return "reglas";
     }
