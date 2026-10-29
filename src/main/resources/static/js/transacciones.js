@@ -1,16 +1,35 @@
 (() => {
     'use strict';
     let filtroActivo = 'todas';
+    let filtroMonto = null;
     const cuerpoTabla = document.getElementById('tablaTransacciones');
 
     function coincideFiltro(nivel) {
         return filtroActivo === 'todas' || filtroActivo === nivel;
     }
 
-    function reaplicarFiltro() {
+    function montoComparado(monto) {
+        if (filtroMonto === null) return true;
+        const valor = Number(filtroMonto.valor);
+        if (Number.isNaN(valor)) return true;
+
+        const actual = Number(monto);
+        switch (filtroMonto.comparador) {
+            case 'mayor': return actual > valor;
+            case 'menor': return actual < valor;
+            case 'igual': return Math.abs(actual - valor) < 0.0001;
+            default: return true;
+        }
+    }
+
+    function reaplicarFiltros() {
         if (!cuerpoTabla) return;
         cuerpoTabla.querySelectorAll('tr[data-nivel]').forEach(tr => {
-            tr.style.display = coincideFiltro(tr.dataset.nivel) ? '' : 'none';
+            const nivel = tr.dataset.nivel;
+            const monto = tr.dataset.monto;
+            const cumpleNivel = coincideFiltro(nivel);
+            const cumpleMonto = montoComparado(monto);
+            tr.style.display = (cumpleNivel && cumpleMonto) ? '' : 'none';
         });
     }
 
@@ -23,7 +42,57 @@
             btn.classList.remove('btn-secundario');
             btn.classList.add('btn-principal');
             filtroActivo = btn.dataset.filtro;
-            reaplicarFiltro();
+            reaplicarFiltros();
+        });
+    });
+
+    const inputMonto = document.getElementById('montoFiltro');
+    const selectMonto = document.getElementById('comparadorMonto');
+    const btnAplicarMonto = document.getElementById('btnAplicarMonto');
+    const btnLimpiarMonto = document.getElementById('btnLimpiarMonto');
+
+    function establecerFiltroMonto(valor, comparador) {
+        if (valor === null || valor === undefined || valor === '') {
+            filtroMonto = null;
+            reaplicarFiltros();
+            return;
+        }
+        const numero = Number(valor);
+        if (Number.isNaN(numero)) {
+            return;
+        }
+        filtroMonto = {
+            valor: numero,
+            comparador: comparador || 'mayor'
+        };
+        reaplicarFiltros();
+    }
+
+    function leerFiltroMontoDesdeInput() {
+        const valor = inputMonto ? inputMonto.value : '';
+        const comparador = selectMonto ? selectMonto.value : 'mayor';
+        establecerFiltroMonto(valor, comparador);
+    }
+
+    if (btnAplicarMonto) {
+        btnAplicarMonto.addEventListener('click', leerFiltroMontoDesdeInput);
+    }
+
+    if (btnLimpiarMonto) {
+        btnLimpiarMonto.addEventListener('click', () => {
+            if (inputMonto) inputMonto.value = '';
+            filtroMonto = null;
+            reaplicarFiltros();
+        });
+    }
+
+    document.querySelectorAll('.btn-filtro-monto').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tipo = btn.dataset.tipo || 'mayor';
+            const valor = btn.dataset.valor || '';
+            if (inputMonto) inputMonto.value = valor;
+            if (selectMonto) selectMonto.value = tipo;
+            establecerFiltroMonto(valor, tipo);
         });
     });
 
