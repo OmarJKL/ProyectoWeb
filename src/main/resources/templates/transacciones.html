@@ -56,14 +56,30 @@
             <div class="cabecera-tarjeta d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <span><i class="bi bi-list-check"></i> Registro Detallado</span>
 
-                <!-- Filtros -->
-                <div class="d-flex gap-2" role="group">
+                <!-- Filtros por nivel -->
+                <div class="d-flex gap-2 flex-wrap" role="group">
                     <button class="btn btn-principal btn-sm btn-filtro px-3" data-filtro="todas">Todas</button>
                     <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="critico">Críticas</button>
                     <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="alto">Alto</button>
                     <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="medio">Medio</button>
                     <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="bajo">Bajo</button>
                 </div>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3 mt-3">
+                <div class="input-group input-group-sm" style="max-width: 250px;">
+                    <span class="input-group-text">Monto</span>
+                    <input id="montoFiltro" type="number" min="0" step="0.01" class="form-control" placeholder="Ej: 1000" />
+                </div>
+                <select id="comparadorMonto" class="form-select form-select-sm" style="max-width: 120px;">
+                    <option value="mayor">Mayor que</option>
+                    <option value="menor">Menor que</option>
+                    <option value="igual">Igual a</option>
+                </select>
+                <button id="btnAplicarMonto" type="button" class="btn btn-sm btn-principal">Mostrar</button>
+                <button id="btnLimpiarMonto" type="button" class="btn btn-sm btn-secundario">Limpiar</button>
+                <button class="btn btn-sm btn-secundario btn-filtro-monto" type="button" data-tipo="mayor" data-valor="1000">> S/ 1000</button>
+                <button class="btn btn-sm btn-secundario btn-filtro-monto" type="button" data-tipo="menor" data-valor="1000">< S/ 1000</button>
             </div>
 
             <div class="table-responsive">
@@ -86,7 +102,7 @@
                         <tr th:if="${#lists.isEmpty(transacciones)}" class="tr-vacia">
                             <td th:colspan="${session.rol == 'ADMIN' ? 10 : 9}" class="text-center text-secondary py-5">No hay transacciones evaluadas en el historial.</td>
                         </tr>
-                        <tr th:each="tx : ${transacciones}" th:data-nivel="${tx.nivel()}">
+                        <tr th:each="tx : ${transacciones}" th:data-nivel="${tx.nivel()}" th:data-monto="${tx.monto()}">
                             <td class="dato-mono fw-bold" th:text="${tx.id()}">TR-00001</td>
                             <td th:text="${tx.clienteNombre()}">María Fernández</td>
                             <td class="dato-mono" th:text="'S/ ' + ${#numbers.formatDecimal(tx.monto(), 1, 2)}">S/ 150.00</td>
