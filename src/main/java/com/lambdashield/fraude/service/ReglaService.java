@@ -1,0 +1,37 @@
+package com.lambdashield.fraude.service;
+
+import com.lambdashield.fraude.domain.entity.ReglaFraude;
+import com.lambdashield.fraude.dto.response.ReglaResponse;
+import com.lambdashield.fraude.repository.ReglaFraudeRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class ReglaService {
+
+    private final ReglaFraudeRepository reglaFraudeRepository;
+
+    public ReglaService(ReglaFraudeRepository reglaFraudeRepository) {
+        this.reglaFraudeRepository = reglaFraudeRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReglaResponse> listar() {
+        return reglaFraudeRepository.findByEsActivaTrueOrderByCodigoReglaAsc()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private ReglaResponse toResponse(ReglaFraude regla) {
+        int peso = regla.getPeso() != null ? regla.getPeso().intValue() : 0;
+        return new ReglaResponse(
+                regla.getCodigoRegla(),
+                regla.getNombreRegla(),
+                regla.getDescripcion(),
+                peso
+        );
+    }
+}
