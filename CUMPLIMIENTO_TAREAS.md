@@ -32,7 +32,7 @@ La aplicación utiliza las entidades JPA existentes y sus repositorios Spring Da
 - `Transaccion`, `EvaluacionFraude`, `EvaluacionRegla` -> evaluación y desglose de reglas.
 - `ReglaFraude`, `Canal`, `TipoTransaccion` -> catálogos.
 
-`AuthService` valida las credenciales contra `usuario_sistema` con BCrypt y resuelve el rol desde `usuario_rol`/`rol`. `ClienteService` obtiene clientes, cuentas, dispositivos e IP conocidas. `TransaccionService` persiste la transacción, la evaluación y cada regla aplicada.
+`AuthService` valida las credenciales contra `usuario_sistema` con BCrypt y resuelve el rol desde `usuario_rol`/`rol`. `ClienteService` consulta clientes y cuentas; `ClienteContextService` determina señales de dispositivo/IP. `EvaluacionTransaccionService` coordina la persistencia de la transacción, la evaluación y cada regla aplicada.
 
 ### Cambios de esquema
 
@@ -45,12 +45,12 @@ Se añadieron las columnas necesarias para la aplicación:
 
 También se normalizaron columnas `jsonb`/`inet` a `TEXT`/`VARCHAR` para que el mismo modelo funcione en PostgreSQL y H2.
 
-El esquema canónico actualizado está en `backend/entity/PostgreSQL/BD-Desarrollo web.sql`.
-La migración para una base existente está en `backend/entity/PostgreSQL/migracion_soft_delete_postgresql.sql`.
+El esquema canónico actualizado está en `backend/src/main/resources/db/postgresql/BD-Desarrollo web.sql`.
+La migración para una base existente está en `backend/src/main/resources/db/postgresql/migracion_soft_delete_postgresql.sql`.
 
 ### Carga inicial idempotente
 
-`DataInitializer` crea, solo si no existen:
+`DataInitializer` coordina sembradores idempotentes que crean, solo si no existen:
 
 - roles ADMIN, ANALISTA y CLIENTE;
 - usuarios de demostración con contraseñas BCrypt;
@@ -148,7 +148,7 @@ En `transacciones.html` se eliminó el botón **Reiniciar Historial**. En su lug
 
 **Cumple.**
 
-Para el portal del cliente, `TransaccionService.crearYEvaluarCliente`:
+Para el portal del cliente, `EvaluacionTransaccionService.crearYEvaluarCliente`:
 
 - toma la hora del servidor;
 - cuenta las evaluaciones activas de la última hora desde PostgreSQL;

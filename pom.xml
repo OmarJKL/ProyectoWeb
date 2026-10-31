@@ -16,6 +16,9 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<archunit.version>1.4.1</archunit.version>
 	</properties>
 
 	<dependencies>
@@ -71,10 +74,38 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit-junit5</artifactId>
+			<version>${archunit.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
+		<sourceDirectory>backend/src/main/java</sourceDirectory>
+		<testSourceDirectory>backend/src/test/java</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>backend/src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>frontend/src/main/resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<directory>backend/src/test/resources</directory>
+			</testResource>
+		</testResources>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<proc>full</proc>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
