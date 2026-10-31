@@ -17,7 +17,7 @@
             </span>
         </div>
 
-        <!-- Indicadores de Rendimiento (KPIs Cuadrados Matemáticamente) -->
+        <!-- Indicadores de Rendimiento -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-xl-3">
                 <div class="kpi-ls activo rounded">
@@ -68,13 +68,22 @@
 
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3 mt-3" style="padding-left: 4px;">
                 <span style="font-size: 2rem; font-weight: 700; font-family: 'Segoe Print', 'Bradley Hand', cursive; color: #d63d3d; line-height: 1; transform: rotate(-4deg);">Monto</span>
-                <input id="montoFiltro" type="number" min="0" step="0.01" class="form-control" placeholder="0" style="width: 140px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-size: 1.15rem; font-weight: 700; color: #2f2f2f; background: rgba(255,255,255,0.2); box-shadow: none;" />
-                <select id="comparadorMonto" class="form-select form-select-sm" style="width: 125px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: rgba(255,255,255,0.2);">
+                <input id="montoFiltro" type="number" min="0" step="0.01" class="form-control" placeholder="0" style="width: 140px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
+                <select id="comparadorMonto" class="form-select form-select-sm" style="width: 125px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
                     <option value="mayor">mayor</option>
                     <option value="menor">menor</option>
                 </select>
                 <button id="btnAplicarMonto" type="button" class="btn btn-sm btn-principal" style="height: 46px; min-width: 110px; border-radius: 10px; border: 2px solid #dc3b3b;">Mostrar</button>
                 <button id="btnLimpiarMonto" type="button" class="btn btn-sm btn-secundario" style="height: 46px; border-radius: 10px; border: 2px solid #dc3b3b; color: #dc3b3b; background: transparent;">Limpiar</button>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3" style="padding-left: 4px;">
+                <span style="font-size: 2rem; font-weight: 700; font-family: 'Segoe Print', 'Bradley Hand', cursive; color: #d63d3d; line-height: 1; transform: rotate(-4deg);">Fecha</span>
+                <input id="diaFiltro" type="number" min="1" max="31" class="form-control" placeholder="Día" style="width: 95px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
+                <input id="mesFiltro" type="number" min="1" max="12" class="form-control" placeholder="Mes" style="width: 95px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
+                <input id="anioFiltro" type="number" min="2020" class="form-control" placeholder="Año" style="width: 110px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
+                <button id="btnAplicarFecha" type="button" class="btn btn-sm btn-principal" style="height: 46px; min-width: 110px; border-radius: 10px; border: 2px solid #dc3b3b;">Mostrar</button>
+                <button id="btnLimpiarFecha" type="button" class="btn btn-sm btn-secundario" style="height: 46px; border-radius: 10px; border: 2px solid #dc3b3b; color: #dc3b3b; background: transparent;">Limpiar</button>
             </div>
 
             <div class="table-responsive">
@@ -90,14 +99,24 @@
                             <th>Puntaje</th>
                             <th>Nivel</th>
                             <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Detalles</th>
+                            <th>Historial</th>
                             <th th:if="${session.rol == 'ADMIN'}">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaTransacciones">
                         <tr th:if="${#lists.isEmpty(transacciones)}" class="tr-vacia">
-                            <td th:colspan="${session.rol == 'ADMIN' ? 10 : 9}" class="text-center text-secondary py-5">No hay transacciones evaluadas en el historial.</td>
+                            <td th:colspan="${session.rol == 'ADMIN' ? 13 : 12}" class="text-center text-secondary py-5">No hay transacciones evaluadas en el historial.</td>
                         </tr>
-                        <tr th:each="tx : ${transacciones}" th:data-nivel="${tx.nivel()}" th:data-monto="${tx.monto()}">
+                        <tr th:each="tx : ${transacciones}"
+                            th:data-cliente="${tx.clienteNombre()}"
+                            th:data-monto="${tx.monto()}"
+                            th:data-fecha="${tx.fechaHora()}"
+                            th:data-puntaje="${tx.puntaje()}"
+                            th:data-nivel="${tx.nivel()}"
+                            th:data-estado="${tx.estado()}"
+                            th:data-fecha-texto="${tx.fecha()}">
                             <td class="dato-mono fw-bold" th:text="${tx.id()}">TR-00001</td>
                             <td th:text="${tx.clienteNombre()}">María Fernández</td>
                             <td class="dato-mono" th:text="'S/ ' + ${#numbers.formatDecimal(tx.monto(), 1, 2)}">S/ 150.00</td>
@@ -116,6 +135,24 @@
                                     <span th:text="${tx.estado()}">Aprobada</span>
                                 </span>
                             </td>
+                            <td class="dato-mono" th:text="${tx.fecha()}">17/05/2026</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger btn-detalle-transaccion">
+                                    <i class="bi bi-file-earmark-text"></i> Ver detalles
+                                </button>
+                                <div class="d-none detalle-factores">
+                                    <div class="detalle-factor" th:each="factor : ${tx.factores()}">
+                                        <span class="detalle-factor-etiqueta" th:text="${factor.etiqueta()}">Monto inusual</span>
+                                        <span class="detalle-factor-puntaje" th:text="${factor.puntaje()} + ' / ' + ${factor.max()}">15 / 25</span>
+                                        <span class="detalle-factor-motivo" th:text="${factor.motivo()}">Se detectó un monto superior al rango esperado</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-ver-historial">
+                                    <i class="bi bi-clock-history"></i> Ver historial
+                                </button>
+                            </td>
                             <td th:if="${session.rol == 'ADMIN'}">
                                 <button type="button" class="btn btn-sm btn-secundario btn-soft-delete"
                                         th:attr="data-id=${tx.idInterno()}"
@@ -126,6 +163,117 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de detalles de la operación -->
+    <div class="modal fade" id="detalleTransaccionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content modal-ls">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Detalle de la operación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="detalle-card">
+                                <span class="label">Cliente</span>
+                                <strong id="detalleCliente">-</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detalle-card">
+                                <span class="label">Fecha</span>
+                                <strong id="detalleFecha">-</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="detalle-card">
+                                <span class="label">Monto</span>
+                                <strong id="detalleMonto">-</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="detalle-card">
+                                <span class="label">Puntaje</span>
+                                <strong id="detallePuntaje">-</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="detalle-card">
+                                <span class="label">Nivel</span>
+                                <strong id="detalleNivel">-</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alerta-ls mb-3" id="detalleAlertBox">
+                        <strong id="detalleEstado">-</strong>
+                    </div>
+
+                    <h6 class="fw-bold mb-2">Causas de bloqueo / revisión</h6>
+                    <ul id="detalleListaFactores" class="lista-factores mb-0"></ul>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secundario" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal del historial del cliente -->
+    <div class="modal fade" id="historialClienteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content modal-ls">
+                <div class="modal-header border-0">
+                    <div>
+                        <h5 class="modal-title fw-bold" id="historialClienteTitulo">Historial del cliente</h5>
+                        <small class="text-secondary" id="historialClienteSubtitulo">-</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="tarjeta-saldo-cliente">
+                                <span class="titulo">Saldo disponible</span>
+                                <strong id="clienteSaldo">S/ 0.00</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="tarjeta-credito-cliente">
+                                <div class="chip"></div>
+                                <div class="logo-chip">LS</div>
+                                <div class="numero-tarjeta">•••• 4821</div>
+                                <div class="info-tarjeta">
+                                    <span id="clienteNombreTarjeta">Cliente</span>
+                                    <small>Lambda Shield</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fecha</th>
+                                    <th>Monto</th>
+                                    <th>Comercio</th>
+                                    <th>Nivel</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaHistorialCliente"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secundario" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
