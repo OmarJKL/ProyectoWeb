@@ -35,7 +35,8 @@ public class EvaluacionResultadoMapper {
                 evaluacion.getNivelRiesgo().name().toLowerCase(Locale.ROOT),
                 evaluacion.getFechaEvaluacion().toLocalDateTime(),
                 factores,
-                evaluacion.getIdEvaluacion()
+                evaluacion.getIdEvaluacion(),
+                evaluacion.isEsActiva()
         );
     }
 

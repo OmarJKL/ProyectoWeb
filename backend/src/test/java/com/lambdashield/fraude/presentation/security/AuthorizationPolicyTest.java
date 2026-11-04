@@ -25,6 +25,31 @@ class AuthorizationPolicyTest {
     }
 
     @Test
+    void adminPuedeBorrarUsuariosPeroNoEvaluaciones() {
+        assertThat(policy.rechazoApi("ADMIN", "DELETE", "/api/v1/user/1")).isEmpty();
+        assertThat(policy.rechazoApi("ADMIN", "DELETE", "/api/v1/evaluation/1"))
+                .contains("DELETE no permitido; use PATCH para desactivar");
+        assertThat(policy.rechazoApi("ANALISTA", "DELETE", "/api/v1/user/1"))
+                .contains("DELETE no permitido; use PATCH para desactivar");
+        assertThat(policy.rechazoApi("CLIENTE", "DELETE", "/api/v1/user/1"))
+                .contains("DELETE no permitido; use PATCH para desactivar");
+    }
+
+    @Test
+    void gestionDeUsuariosEsExclusivaDeAdminIncluidaLaConsulta() {
+        assertThat(policy.rechazoApi("ADMIN", "GET", "/api/v1/user")).isEmpty();
+        assertThat(policy.rechazoApi("ANALISTA", "GET", "/api/v1/user")).contains("No autorizado");
+        assertThat(policy.rechazoApi("CLIENTE", "GET", "/api/v1/user")).contains("No autorizado");
+    }
+
+    @Test
+    void paginaDeUsuariosEsSoloParaAdmin() {
+        assertThat(policy.redireccionPagina("ADMIN", "/usuarios")).isEmpty();
+        assertThat(policy.redireccionPagina("ANALISTA", "/usuarios")).contains("/");
+        assertThat(policy.redireccionPagina("CLIENTE", "/usuarios")).contains("/operacion");
+    }
+
+    @Test
     void clientesYAnalistasSoloAccedenASusPaginas() {
         assertThat(policy.redireccionPagina("CLIENTE", "/operacion")).isEmpty();
         assertThat(policy.redireccionPagina("CLIENTE", "/reportes")).contains("/operacion");

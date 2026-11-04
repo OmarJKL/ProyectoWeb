@@ -19,5 +19,6 @@ public record EvaluacionResponse(
     String fecha,
     LocalDateTime fechaHora,
     List<FactorResponse> factores,
-    Long idInterno
+    Long idInterno,
+    boolean activa
 ) {}

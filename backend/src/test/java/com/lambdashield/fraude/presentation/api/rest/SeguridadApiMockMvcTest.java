@@ -198,6 +198,73 @@ class SeguridadApiMockMvcTest {
         assertThat(transaccionesDelModelo(result)).isEmpty();
     }
 
+    @Test
+    void adminReactivaEvaluacionDesactivada() throws Exception {
+        Long id = evaluacionFraudeRepository.findByEsActivaTrueOrderByFechaEvaluacionDesc()
+                .getFirst().getIdEvaluacion();
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}", id).session(admin()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}/activar", id).session(admin()))
+                .andExpect(status().isNoContent());
+
+        var restaurada = evaluacionFraudeRepository.findById(id).orElseThrow();
+        assertThat(restaurada.isEsActiva()).isTrue();
+        assertThat(restaurada.getFechaDesactivacion()).isNull();
+    }
+
+    @Test
+    void analistaYClienteNoPuedenReactivar() throws Exception {
+        Long id = evaluacionFraudeRepository.findByEsActivaTrueOrderByFechaEvaluacionDesc()
+                .getFirst().getIdEvaluacion();
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}", id).session(admin()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}/activar", id).session(analista()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("No autorizado"));
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}/activar", id).session(cliente()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void reactivarEvaluacionInexistenteDevuelve404() throws Exception {
+        mockMvc.perform(patch("/api/v1/evaluation/{id}/activar", 999999).session(admin()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errores").isArray());
+    }
+
+    @Test
+    void reactivarEvaluacionYaActivaDevuelve400() throws Exception {
+        Long id = evaluacionFraudeRepository.findByEsActivaTrueOrderByFechaEvaluacionDesc()
+                .getFirst().getIdEvaluacion();
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}/activar", id).session(admin()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errores[0]").value("La evaluación ya está activa: " + id));
+    }
+
+    @Test
+    void listadoIncluyeDesactivadasSoloConActivasFalse() throws Exception {
+        Long id = evaluacionFraudeRepository.findByEsActivaTrueOrderByFechaEvaluacionDesc()
+                .getFirst().getIdEvaluacion();
+
+        mockMvc.perform(patch("/api/v1/evaluation/{id}", id).session(admin()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/v1/evaluation").session(admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.idInterno == " + id + ")]").isEmpty());
+
+        mockMvc.perform(get("/api/v1/evaluation?activas=false").session(admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.idInterno == " + id + ")].activa")
+                        .value(org.hamcrest.Matchers.contains(false)));
+    }
+
     @SuppressWarnings("unchecked")
     private static List<EvaluacionResponse> transaccionesDelModelo(MvcResult result) {
         return (List<EvaluacionResponse>) result.getModelAndView()

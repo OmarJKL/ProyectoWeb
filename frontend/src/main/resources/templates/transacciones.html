@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Historial')}"></head>
-<body>
+<body th:attr="data-rol=${session.rol}">
     <!-- Barra de Navegación -->
     <nav th:replace="~{fragments/navbar :: navbar('transacciones')}"></nav>
 
@@ -12,7 +12,7 @@
                 <p class="text-secondary small mb-0">Monitoreo y registro de las evaluaciones del motor.</p>
             </div>
             <span class="text-secondary small" th:if="${session.rol == 'ADMIN'}">
-                <i class="bi bi-info-circle"></i> La baja es lógica: usa “Desactivar” en cada fila.
+                <i class="bi bi-info-circle"></i> Baja lógica: “Desactivar” oculta la fila; “Reactivar” la recupera.
             </span>
         </div>
 
@@ -58,11 +58,12 @@
                     <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="alto">Alto</button>
                     <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="medio">Medio</button>
                     <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="bajo">Bajo</button>
+                    <button class="btn btn-secundario btn-sm btn-filtro px-3" data-filtro="desactivadas">Desactivadas</button>
                 </div>
             </div>
 
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3 mt-3" style="padding-left: 4px;">
-                <span style="font-size: 2rem; font-weight: 700; font-family: 'Segoe Print', 'Bradley Hand', cursive; color: #d63d3d; line-height: 1; transform: rotate(-4deg);">Monto</span>
+                <span class="etiqueta-filtro">Monto</span>
                 <input id="montoFiltro" type="number" min="0" step="0.01" class="form-control" placeholder="0" style="width: 140px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
                 <select id="comparadorMonto" class="form-select form-select-sm" style="width: 125px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
                     <option value="mayor">mayor</option>
@@ -73,7 +74,7 @@
             </div>
 
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3" style="padding-left: 4px;">
-                <span style="font-size: 2rem; font-weight: 700; font-family: 'Segoe Print', 'Bradley Hand', cursive; color: #d63d3d; line-height: 1; transform: rotate(-4deg);">Fecha</span>
+                <span class="etiqueta-filtro">Fecha</span>
                 <select id="mesFiltro" class="form-select form-select-sm" style="width: 130px; height: 46px; border: 2px solid #dc3b3b; border-radius: 10px; font-weight: 700; color: #2f2f2f; background: #fff;">
                     <option value="">Mes</option>
                     <option value="1">Enero</option>
@@ -192,7 +193,7 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <div class="tarjeta-saldo-cliente">
-                                <span class="titulo">Saldo disponible</span>
+                                <span class="titulo">Total evaluado</span>
                                 <strong id="clienteSaldo">S/ 0.00</strong>
                             </div>
                         </div>
@@ -227,6 +228,22 @@
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secundario" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmarAccionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-ls">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="confirmarTitulo">Confirmar acción</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmarMensaje">-</div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-principal" id="confirmarAceptar">Confirmar</button>
                 </div>
             </div>
         </div>

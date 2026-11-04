@@ -34,7 +34,6 @@ backend/src/main/
 │   │   ├── command/               # Comandos de entrada de los casos de uso
 │   │   ├── model/                 # Modelos de resultado independientes de la interfaz
 │   │   ├── mapper/                # Entidades del dominio -> modelos de aplicación
-│   │   ├── port/                  # Puertos de salida implementados fuera de la capa
 │   │   └── service/               # Casos de uso, consultas y coordinación
 │   ├── domain/                    # Capa de dominio (sin dependencias hacia otras capas)
 │   │   ├── entity/                # Entidades JPA del modelo de negocio
@@ -44,8 +43,7 @@ backend/src/main/
 │   │   └── customer/              # Reglas de presentación del nombre del cliente
 │   ├── repository/                # Persistencia: contratos Spring Data JPA
 │   └── config/                    # Composición y configuración (raíz de dependencias)
-│       ├── seed/                  # Sembradores demo idempotentes por responsabilidad
-│       └── demo/                  # Implementación demo de los puertos de aplicación
+│       └── seed/                  # Sembradores demo idempotentes por responsabilidad
 └── resources/                     # Configuración del backend y scripts SQL
 
 backend/src/test/                  # Pruebas unitarias, de integración y de arquitectura
@@ -85,7 +83,7 @@ El proyecto conserva una aplicación Spring MVC/Thymeleaf: las vistas y recursos
 
 Los controladores no contienen lógica de negocio. Las entidades JPA usan getters/setters explícitos en vez de `@Data`, evitando `equals`, `hashCode` y `toString` generados sobre relaciones bidireccionales.
 
-> **Nota:** los valores base y las series gráficas del dashboard siguen siendo ilustrativos. Están detrás del puerto `DashboardDataSource` e implementados por `config/demo/DashboardDemoDataProvider`; los egresos de evaluaciones se agregan desde PostgreSQL. Para mostrar un libro contable real, basta con una nueva implementación del puerto que haga consultas agregadas.
+> **Nota:** las cifras del dashboard (saldo, ingresos, egresos, variaciones, serie diaria y movimientos recientes) provienen de PostgreSQL: saldo de las cuentas activas y movimientos según la naturaleza (débito/crédito) de cada transacción. Las variaciones comparan el periodo elegido con el inmediatamente anterior.
 
 ---
 
@@ -107,7 +105,7 @@ Los cambios de migración aplicados a una base existente están en `backend/src/
 `spring.jpa.hibernate.ddl-auto=validate` obliga a Hibernate a comparar cada entidad con las columnas reales al arrancar. Para verificar el esquema sin levantar el servidor web:
 
 ```powershell
-$env:DB_PASSWORD='<tu-clave>'
+# Con las credenciales de .env no hace falta exportar nada
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--spring.main.web-application-type=none"
 ```
 
@@ -134,9 +132,15 @@ Las evaluaciones no se eliminan físicamente:
 - cambia la transacción asociada a `REVERSADA`
 - la fila permanece en la base de datos y desaparece de las listas activas
 
-No existe un endpoint `DELETE`. Las peticiones `DELETE` a `/api/v1/evaluation` responden `405`.
+La operación es reversible:
 
-En la vista de historial, el administrador dispone del botón **Desactivar** por fila. El antiguo botón **Reiniciar Historial** fue eliminado.
+- `PATCH /api/v1/evaluation/{id}/activar` vuelve `es_activa` a `true`, borra `fecha_desactivacion` y la transacción recupera el estado que le corresponde según su nivel de riesgo (`bajo/medio` → `APROBADA`, `alto` → `RETENIDA`, `crítico` → `BLOQUEADA`).
+- El dinero es simétrico: al desactivar una operación aprobada se devuelve el monto a la cuenta, y al reactivarla se descuenta otra vez (con la misma validación de saldo).
+- `GET /api/v1/evaluation?activas=false` incluye también las desactivadas (cada registro trae el flag `activa`).
+
+No existe un endpoint `DELETE` sobre evaluaciones. Las peticiones `DELETE` a `/api/v1/evaluation` responden `405`. La única excepción es la gestión de usuarios (`DELETE /api/v1/user/{id}`), reservada a ADMIN.
+
+En la vista de historial, el administrador dispone de los botones **Desactivar** y **Reactivar** por fila, ambos con un modal de confirmación. El filtro **Desactivadas** muestra las que están dadas de baja.
 
 ---
 
@@ -146,17 +150,21 @@ En la vista de historial, el administrador dispone del botón **Desactivar** por
 
 - Transferencias protegidas con evaluación antifraude en tiempo real.
 - Factores de dispositivo, IP, horario y frecuencia derivados en el servidor.
+- **Tipo de destinatario derivado del historial**: el cliente no declara si el destinatario es nuevo o frecuente; se determina por las transferencias previas al mismo nombre (la primera vez es nuevo y a partir de la segunda, frecuente).
+- **Saldo real y persistente**: las operaciones aprobadas descuentan el saldo de la cuenta y registran `saldo_anterior`/`saldo_posterior`; si el saldo no alcanza, la operación se rechaza con `400 Saldo insuficiente`. Las operaciones retenidas o bloqueadas no mueven dinero.
 - Historial limitado a las operaciones del cliente autenticado.
-- Saldo y número de cuenta obtenidos desde PostgreSQL.
+- Estados diferenciados por operación: procesada, en monitoreo, retenida en revisión o bloqueada.
+- Avisos de seguridad con las operaciones de riesgo alto o crítico y el detalle de las causas detectadas en cada rechazo.
 
 ### Panel administrativo y analista
 
-- Dashboard con métricas de saldo, ingresos y egresos.
-- Historial de evaluaciones activas con filtros por nivel.
+- Dashboard con cifras reales: saldo de cuentas activas, ingresos/egresos, variaciones frente al periodo anterior, serie diaria y últimos movimientos.
+- Historial de evaluaciones con datos reales, filtros por nivel, monto y fecha, y vista de desactivadas.
 - Simulador manual de transacciones con desglose de factores.
 - Catálogo de reglas leído desde `regla_fraude`.
-- Reportes y exportación CSV.
+- Reportes con filtros por fecha, nivel y cliente, y exportación en CSV, Excel y PDF.
 - Desactivación lógica de evaluaciones por parte de ADMIN.
+- Gestión de usuarios (solo ADMIN): alta, edición, cambio de clave, cambio de rol/estado y baja física, con protección del último administrador.
 
 ---
 
@@ -190,8 +198,8 @@ Las credenciales se validan contra `usuario_sistema` usando BCrypt. Los roles se
 
 | Rol | Usuario | Páginas | API |
 | :--- | :--- | :--- | :--- |
-| **ADMIN** | `admin` | Todas | Todos los métodos permitidos, incluido `PATCH /api/v1/evaluation/{id}` |
-| **ANALISTA** | `analista` | Inicio, transacciones, reglas y reportes | Solo `GET /api/**` |
+| **ADMIN** | `admin` | Todas | Todos los métodos permitidos, incluido `PATCH /api/v1/evaluation/{id}`, la gestión de `/api/v1/user` y su `DELETE` |
+| **ANALISTA** | `analista` | Inicio, transacciones, reglas y reportes | Solo `GET /api/**`, excepto `/api/v1/user` (reservado a ADMIN) |
 | **CLIENTE** | `usuario`, `maria`, `cliente` | Solo `/operacion` | Solo `POST /api/v1/evaluation` para su propio cliente |
 
 Reglas de sesión:
@@ -200,7 +208,7 @@ Reglas de sesión:
 - Sin sesión, las páginas protegidas redirigen a `/login`.
 - Si el rol no tiene permiso, la API responde `403` con `{"error":"No autorizado"}`.
 - El portal del cliente usa el `codigoCliente` de la sesión y no confía en el cliente enviado en el body.
-- `DELETE` no está permitido en ninguna ruta de la API.
+- `DELETE` solo está permitido en `/api/v1/user/{id}` (gestión de usuarios, solo ADMIN). En el resto de la API responde `405`.
 
 Las contraseñas de demostración no se publican en esta documentación; están definidas en `config/seed/UsuarioDemoSeeder` y se almacenan cifradas en la base de datos.
 
@@ -221,7 +229,19 @@ La conexión se configura en `backend/src/main/resources/application.properties`
 jdbc:postgresql://localhost:5432/lambda_shield
 ```
 
-El usuario y la contraseña se toman de las variables de entorno `DB_USER` y `DB_PASSWORD` (por defecto `postgres` / `postgres`).
+El usuario, la contraseña y el resto de parámetros de conexión se configuran en el archivo **`.env`** de la raíz del repositorio:
+
+```text
+DB_USER=postgres
+DB_PASSWORD=postgres
+#DB_HOST=localhost
+#DB_PORT=5432
+#DB_NAME=lambda_shield
+```
+
+Spring Boot lo carga al arrancar mediante `spring.config.import=optional:file:./.env[.properties]` en `application.properties`. Si el archivo no existe, se usan los valores por defecto de la tabla. Las variables de entorno reales (`DB_USER`, `DB_PASSWORD`, ...) tienen prioridad sobre `.env`, así que en producción basta con exportarlas sin tocar el archivo.
+
+`.env` está en `.gitignore`: no se sube al repositorio. Para crear uno nuevo, copia la plantilla `.env.example`.
 
 Antes de arrancar, aplica `backend/src/main/resources/db/postgresql/BD-Desarrollo web.sql` en una base nueva o `backend/src/main/resources/db/postgresql/migracion_soft_delete_postgresql.sql` en una base existente. El runtime usa `spring.jpa.hibernate.ddl-auto=validate`.
 
@@ -252,12 +272,17 @@ Abre `http://localhost:8080` e inicia sesión con uno de los usuarios de demostr
 .\mvnw.cmd clean test
 ```
 
-Las pruebas usan **H2 en modo PostgreSQL**, con `ddl-auto=create-drop`, por lo que **no requieren una instancia de PostgreSQL**. Son 47 pruebas en cinco grupos:
+Las pruebas usan **H2 en modo PostgreSQL**, con `ddl-auto=create-drop`, por lo que **no requieren una instancia de PostgreSQL**. Son 81 pruebas en diez grupos:
 
 - `domain.fraud.rule.ReglasFraudeTest`: valores límite de las ocho reglas;
 - `application.service.DeteccionFraudeServiceTest`: umbrales del motor de detección;
-- `presentation.api.rest.SeguridadApiMockMvcTest`: autenticación, autorización por rol, baja lógica con `PATCH`, rechazo de `DELETE` y aislamiento del portal del cliente;
+- `presentation.api.rest.SeguridadApiMockMvcTest`: autenticación, autorización por rol, baja lógica con `PATCH`, reactivación, listado con desactivadas, rechazo de `DELETE` y aislamiento del portal del cliente;
 - `presentation.api.rest.ValidacionApiMockMvcTest`: validación de cada campo y parámetro de la API, JSON malformado, tipos incorrectos y `Content-Type` no soportado;
+- `presentation.api.rest.UsuarioApiMockMvcTest`: CRUD de usuarios, unicidad, cambio de clave, protección del último administrador y permisos;
+- `presentation.api.rest.ReporteApiMockMvcTest`: exportación CSV/Excel/PDF, filtros por fecha, nivel y cliente, y validación del formato;
+- `presentation.api.rest.DashboardApiMockMvcTest`: cifras reales del resumen, serie diaria y movimientos recientes;
+- `presentation.api.rest.PortalClienteApiMockMvcTest`: tipo de destinatario derivado del historial, descuento de saldo, rechazo por saldo insuficiente y bloqueos sin movimiento de dinero;
+- `presentation.api.rest.SaludMockMvcTest`: `/actuator/health` público y sin detalles; el resto de Actuator no expuesto;
 - `architecture.ArquitecturaCapasTest`: las seis reglas de ArchUnit (capas, dominio sin Spring, aplicación sin web, controladores en `presentation`, sin acceso a repositorios desde controladores y sin ciclos).
 
 Si una carpeta está sincronizada con OneDrive, `clean` puede fallar por bloqueos de archivos; basta con `.\mvnw.cmd test`.
@@ -269,14 +294,21 @@ Si una carpeta está sincronizada con OneDrive, `clean` puede fallar por bloqueo
 | Método | Endpoint | Descripción | Roles | Códigos |
 | :--- | :--- | :--- | :--- | :--- |
 | `POST` | `/api/v1/evaluation` | Evalúa y persiste una transacción | ADMIN, CLIENTE (forzado a su propio código) | 200, 400, 401, 403, 404, 415 |
-| `GET` | `/api/v1/evaluation` | Lista evaluaciones activas | ADMIN, ANALISTA | 200, 401, 403 |
+| `GET` | `/api/v1/evaluation` | Lista evaluaciones activas (`?activas=false` incluye las desactivadas) | ADMIN, ANALISTA | 200, 401, 403 |
 | `PATCH` | `/api/v1/evaluation/{id}` | Desactiva una evaluación (baja lógica) | ADMIN | 204, 400, 401, 403, 404 |
+| `PATCH` | `/api/v1/evaluation/{id}/activar` | Reactiva una evaluación dada de baja | ADMIN | 204, 400, 401, 403, 404 |
 | `GET` | `/api/v1/metric` | KPIs consolidados | ADMIN, ANALISTA | 200, 401, 403 |
 | `GET` | `/api/v1/metric/summary?days={n}` | Balance contable del periodo | ADMIN, ANALISTA | 200, 400, 401, 403 |
 | `GET` | `/api/v1/metric/movement?days={n}` | Serie temporal para el gráfico | ADMIN, ANALISTA | 200, 400, 401, 403 |
 | `GET` | `/api/v1/metric/recent?days={n}` | Movimientos recientes | ADMIN, ANALISTA | 200, 400, 401, 403 |
 | `GET` | `/api/v1/rule` | Reglas activas desde la base de datos | ADMIN, ANALISTA | 200, 401, 403 |
-| `GET` | `/api/v1/report/export` | Reporte CSV | ADMIN, ANALISTA | 200, 401, 403 |
+| `GET` | `/api/v1/report/export?formato={csv\|xlsx\|pdf}` | Reporte con filtros `desde`, `hasta`, `nivel`, `cliente` | ADMIN, ANALISTA | 200, 400, 401, 403 |
+| `GET` | `/api/v1/user` | Lista de usuarios del sistema | ADMIN | 200, 401, 403 |
+| `GET` | `/api/v1/user/{id}` | Usuario por identificador | ADMIN | 200, 400, 401, 403, 404 |
+| `POST` | `/api/v1/user` | Alta de usuario (rol, clave BCrypt y cliente asociado) | ADMIN | 201, 400, 401, 403 |
+| `PATCH` | `/api/v1/user/{id}` | Actualiza nombres, correo, estado, rol y cliente | ADMIN | 200, 400, 401, 403, 404 |
+| `PATCH` | `/api/v1/user/{id}/clave` | Cambia la clave del usuario | ADMIN | 204, 400, 401, 403, 404 |
+| `DELETE` | `/api/v1/user/{id}` | Baja física de una cuenta y sus roles | ADMIN | 204, 400, 401, 403, 404 |
 
 Validaciones de entrada:
 
@@ -286,7 +318,9 @@ Validaciones de entrada:
 | | `monto` | Mayor que cero; hasta 16 enteros y 2 decimales |
 | | `categoria` | Opcional; letras y `_`, máximo 40 caracteres (vacío = `otros`) |
 | | `hora` | 0-23 |
-| | `pais`, `dispositivo`, `beneficiario`, `ip` | Obligatorios; sólo los valores permitidos del simulador |
+| | `pais`, `dispositivo`, `ip` | Obligatorios; sólo los valores permitidos del simulador |
+| | `beneficiario` | Opcional (`recurrente`/`nuevo`); el portal del cliente lo deriva del historial |
+| | `beneficiarioNombre` | Opcional; hasta 150 caracteres. Identifica al destinatario y con él se deriva el tipo |
 | | `operacionesUltimaHora` | 0-1000 |
 | `PATCH /api/v1/evaluation/{id}` | `id` | Número entero positivo |
 | `GET /api/v1/metric/*` | `days` | 1-365 (rango máximo del dashboard) |
@@ -311,16 +345,35 @@ Rutas Thymeleaf servidas por `presentation/web`. No son endpoints REST: devuelve
 | `/operacion` | `OperacionClienteController` | CLIENTE | Banca en línea del cliente autenticado |
 | `/transacciones` | `TransaccionViewController` | ADMIN, ANALISTA | Historial de evaluaciones y KPIs |
 | `/reglas` | `ReglaViewController` | ADMIN, ANALISTA | Catálogo de reglas del motor |
-| `/reportes` | `ReporteController` | ADMIN, ANALISTA | Reportes y exportación |
+| `/reportes` | `ReporteController` | ADMIN, ANALISTA | Reportes con filtros y exportación CSV/Excel/PDF |
 | `/simulador` | `SimuladorViewController` | ADMIN | Simulador manual de transacciones |
+| `/usuarios` | `UsuarioViewController` | ADMIN | Gestión de usuarios (CRUD) |
 
-Un ANALISTA que intente abrir `/operacion` o `/simulador` se redirige a `/`; un CLIENTE que intente cualquier página distinta de `/operacion` se redirige a `/operacion`. La política vive en `presentation/security/AuthorizationPolicy`.
+Un ANALISTA que intente abrir `/operacion`, `/simulador` o `/usuarios` se redirige a `/`; un CLIENTE que intente cualquier página distinta de `/operacion` se redirige a `/operacion`. La política vive en `presentation/security/AuthorizationPolicy`.
 
 ---
 
 ## Codificación de archivos
 
 Todo el código y los recursos son **UTF-8 sin BOM**, con finales de línea CRLF en Windows (`.gitattributes` mantiene `mvnw` en LF). El `pom.xml` fija `project.build.sourceEncoding=UTF-8` y `project.reporting.outputEncoding=UTF-8`, de modo que `javac` interpreta los acentos igual con JDK 17 o superior, sin depender del *default charset* de la máquina. En tiempo de ejecución, `server.servlet.encoding.charset=UTF-8` con `force=true` garantiza que las respuestas HTTP declaren UTF-8.
+
+---
+
+## Operación y calidad
+
+**Base de datos local con Docker** (opcional, en lugar de instalar PostgreSQL):
+
+```powershell
+docker compose up -d
+```
+
+`docker-compose.yml` levanta PostgreSQL 18 con las variables de `.env` y aplica el esquema canónico solo la primera vez, cuando el volumen está vacío. Para reaplicarlo: `docker compose down -v`. Si ya tienes PostgreSQL en el puerto 5432, define `DB_PORT=5433` en `.env`.
+
+**Salud de la aplicación:** `GET /actuator/health` responde `{"status":"UP"}` sin sesión y sin detalles de la base de datos. El resto de endpoints de Actuator no están expuestos.
+
+**Cobertura:** `.\mvnw.cmd test` genera el reporte JaCoCo en `target/site/jacoco/index.html`.
+
+**Integración continua:** `.github/workflows/ci.yml` ejecuta las pruebas con JDK 21 en cada push a `main` y en cada pull request, y publica el reporte de cobertura como artefacto.
 
 ---
 

@@ -78,12 +78,11 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Tipo de Destinatario</label>
-                                <select class="form-select" id="trBeneficiario">
-                                    <option value="recurrente">Destinatario frecuente / habitual</option>
-                                    <option value="nuevo">Nuevo destinatario (primera vez)</option>
-                                </select>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="p-2 rounded w-100" style="background-color: var(--fondo-input); font-size: 0.8rem; color: var(--texto-secundario);">
+                                    <i class="bi bi-arrow-repeat text-success"></i>
+                                    El tipo de destinatario se determina automáticamente: si ya le transferiste antes, se trata como destinatario frecuente.
+                                </div>
                             </div>
                         </div>
 
@@ -119,6 +118,19 @@
         <!-- Historial de Operaciones del Titular -->
         <div class="tarjeta-ls p-4 border-top border-danger border-3">
             <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> Mis Transferencias Recientes</h5>
+
+            <!-- Avisos de seguridad -->
+            <div th:if="${!#lists.isEmpty(avisos)}" class="mb-4">
+                <div class="alerta-ls mb-2" th:each="aviso : ${avisos}">
+                    <strong th:text="'Operación ' + ${aviso.id()} + ': ' + ${aviso.estado()}">Operación</strong>
+                    <span class="text-secondary small d-block">
+                        Monto S/ <span th:text="${#numbers.formatDecimal(aviso.monto(), 1, 2)}">0.00</span>
+                        · puntaje <span th:text="${aviso.puntaje()}">0</span>
+                        · Si no reconoces esta operación, comunícate al 0800-LAMBDA.
+                    </span>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
                     <thead>
@@ -140,11 +152,17 @@
                             <td class="dato-mono fw-bold" th:text="'S/ ' + ${#numbers.formatDecimal(tx.monto(), 1, 2)}">S/ 150.00</td>
                             <td th:text="${tx.categoria()}">Servicios</td>
                             <td>
-                                <span th:if="${tx.nivel() == 'bajo' or tx.nivel() == 'medio'}" class="badge bg-success py-1 px-2">
+                                <span th:if="${tx.nivel() == 'bajo'}" class="badge bg-success py-1 px-2">
                                     <i class="bi bi-check-circle-fill"></i> Procesada con éxito
                                 </span>
-                                <span th:if="${tx.nivel() == 'alto' or tx.nivel() == 'critico'}" class="badge bg-danger py-1 px-2">
-                                    <i class="bi bi-shield-exclamation"></i> En validación preventiva
+                                <span th:if="${tx.nivel() == 'medio'}" class="badge bg-warning text-dark py-1 px-2">
+                                    <i class="bi bi-eye-fill"></i> En monitoreo
+                                </span>
+                                <span th:if="${tx.nivel() == 'alto'}" class="badge bg-danger py-1 px-2">
+                                    <i class="bi bi-shield-exclamation"></i> Retenida en revisión
+                                </span>
+                                <span th:if="${tx.nivel() == 'critico'}" class="badge bg-dark py-1 px-2">
+                                    <i class="bi bi-x-octagon-fill"></i> Bloqueada
                                 </span>
                             </td>
                         </tr>

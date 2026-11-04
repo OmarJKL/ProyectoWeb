@@ -43,7 +43,8 @@ public class EvaluacionDemoSeeder {
         for (DemoTransaccion demo : DEMOS) {
             evaluacionTransaccionService.crearYEvaluar(new EvaluarTransaccionCommand(
                     demo.cliente(), demo.monto(), demo.categoria(), demo.hora(), demo.pais(),
-                    demo.dispositivo(), demo.operaciones(), demo.beneficiario(), demo.ip()));
+                    demo.dispositivo(), demo.operaciones(), demo.beneficiario(), demo.ip(),
+                    null));
         }
     }
 }

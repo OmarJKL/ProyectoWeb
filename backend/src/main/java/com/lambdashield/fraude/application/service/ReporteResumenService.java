@@ -26,7 +26,10 @@ public class ReporteResumenService {
     }
 
     public ResumenReporte obtenerResumen() {
-        List<EvaluacionResultado> transacciones = evaluacionConsultaService.listarTodas();
+        return resumir(evaluacionConsultaService.listarTodas());
+    }
+
+    public ResumenReporte resumir(List<EvaluacionResultado> transacciones) {
         long total = transacciones.size();
         long aprobadas = transacciones.stream().filter(t -> "bajo".equals(t.nivel())).count();
         long monitoreadas = transacciones.stream().filter(t -> "medio".equals(t.nivel())).count();

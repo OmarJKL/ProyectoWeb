@@ -26,6 +26,11 @@
                             <i class="bi bi-file-earmark-bar-graph"></i> Reportes
                         </a>
                     </li>
+                    <li class="nav-item" th:if="${session.rol == 'ADMIN'}">
+                        <a class="nav-link" th:classappend="${paginaActiva == 'usuarios' ? 'active' : ''}" th:href="@{/usuarios}">
+                            <i class="bi bi-people-fill"></i> Usuarios
+                        </a>
+                    </li>
                 </th:block>
 
                 <!-- Enlaces para el Usuario Estándar (Cliente) -->

@@ -10,5 +10,6 @@ public record EvaluarTransaccionCommand(
         String dispositivo,
         int operacionesUltimaHora,
         String beneficiario,
-        String ip
+        String ip,
+        String beneficiarioNombre
 ) {}

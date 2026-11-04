@@ -43,7 +43,7 @@ public class TransaccionReferenciasResolver {
                 tipoTransaccion(request.categoria()),
                 canalWeb(),
                 dispositivo(cliente, request.dispositivo(), userAgent),
-                beneficiario(cliente, request.beneficiario())
+                beneficiario(cliente, request.beneficiario(), request.beneficiarioNombre())
         );
     }
 
@@ -104,7 +104,35 @@ public class TransaccionReferenciasResolver {
                 .build());
     }
 
-    private Beneficiario beneficiario(Cliente cliente, String tipoBeneficiario) {
+    /**
+     * Resuelve el beneficiario de la operación. Si se conoce su nombre, el tipo
+     * (nuevo o recurrente) se deriva del historial real del cliente: la primera
+     * vez se crea como nuevo y en las siguientes transferencias al mismo
+     * destinatario pasa a recurrente. Sin nombre, se respeta el tipo declarado
+     * con un destinatario genérico (simulador del administrador).
+     */
+    private Beneficiario beneficiario(Cliente cliente, String tipoBeneficiario, String nombreBeneficiario) {
+        if (nombreBeneficiario != null && !nombreBeneficiario.isBlank()) {
+            String nombre = nombreBeneficiario.trim();
+            return beneficiarioRepository
+                    .findFirstByCliente_IdClienteAndNombreBeneficiario(cliente.getIdCliente(), nombre)
+                    .map(existente -> {
+                        existente.setEsConocido(true);
+                        existente.setFechaUltimoUso(OffsetDateTime.now());
+                        return beneficiarioRepository.save(existente);
+                    })
+                    .orElseGet(() -> beneficiarioRepository.save(Beneficiario.builder()
+                            .cliente(cliente)
+                            .nombreBeneficiario(nombre)
+                            .entidadFinanciera("Lambda Bank")
+                            .codigoPais("PE")
+                            .esConocido(false)
+                            .fechaPrimerUso(OffsetDateTime.now())
+                            .fechaUltimoUso(OffsetDateTime.now())
+                            .esActivo(true)
+                            .build()));
+        }
+
         boolean nuevo = "nuevo".equalsIgnoreCase(tipoBeneficiario);
         String nombre = nuevo ? "Destinatario nuevo" : "Destinatario recurrente";
         return beneficiarioRepository

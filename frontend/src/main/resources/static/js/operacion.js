@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function pintarReciboRevision(data) {
+        const esBloqueo = data.nivel === 'critico';
         const alerta = document.createElement('div');
         alerta.className = 'alert alert-danger p-3 rounded';
         alerta.style.borderLeft = '5px solid var(--utp-rojo)';
@@ -55,23 +56,68 @@ document.addEventListener('DOMContentLoaded', () => {
         icono.className = 'bi bi-shield-x fs-4 text-danger';
         const titulo = document.createElement('strong');
         titulo.className = 'fs-5';
-        titulo.textContent = 'Operación en Validación Preventiva';
+        titulo.textContent = esBloqueo ? 'Operación Bloqueada por Seguridad' : 'Operación en Validación Preventiva';
         cabecera.append(icono, titulo);
 
         const mensaje = document.createElement('p');
         mensaje.className = 'mb-2 small';
         mensaje.style.color = 'var(--utp-rojo-oscuro)';
-        mensaje.textContent = 'Hemos detectado parámetros atípicos en esta operación (monto inusual o canal no reconocido). Por tu seguridad, la transferencia ha sido pausada temporalmente para revisión de identidad.';
+        mensaje.textContent = esBloqueo
+            ? 'El motor antifraude detectó indicadores de riesgo crítico y detuvo la operación. El dinero no fue transferido.'
+            : 'Hemos detectado parámetros atípicos en esta operación. Por tu seguridad, la transferencia ha sido pausada temporalmente para revisión de identidad.';
 
         const detalle = document.createElement('div');
         detalle.className = 'p-2 rounded bg-white border small dato-mono text-dark';
         detalle.append(
             crearLineaRecibo('Código de Incidencia:', data.id),
-            crearLineaRecibo('Estado:', 'Retenida en revisión'),
-            crearLineaRecibo('Soporte:', 'Comunícate al 0800-LAMBDA si fuiste tú quien solicitó el movimiento.')
+            crearLineaRecibo('Estado:', data.estado),
+            crearLineaRecibo('Puntaje de riesgo:', data.puntaje + ' pts')
         );
 
+        const causas = (data.factores || []).filter(f => f.puntaje > 0);
+        if (causas.length) {
+            const bloque = document.createElement('div');
+            bloque.className = 'mt-2 small';
+            const tituloCausas = document.createElement('strong');
+            tituloCausas.textContent = 'Causas detectadas:';
+            bloque.appendChild(tituloCausas);
+            const lista = document.createElement('ul');
+            lista.className = 'mb-0 mt-1';
+            causas.forEach(factor => {
+                const li = document.createElement('li');
+                li.textContent = factor.etiqueta + ' (' + factor.puntaje + ' / ' + factor.max + ' pts): ' + factor.motivo;
+                lista.appendChild(li);
+            });
+            bloque.appendChild(lista);
+            detalle.appendChild(bloque);
+        }
+
+        const soporte = document.createElement('p');
+        soporte.className = 'mt-2 mb-0 small';
+        soporte.textContent = 'Soporte: Comunícate al 0800-LAMBDA si fuiste tú quien solicitó el movimiento.';
+        detalle.appendChild(soporte);
+
         alerta.append(cabecera, mensaje, detalle);
+        resultadoDiv.replaceChildren(alerta);
+    }
+
+    function pintarError(mensaje) {
+        const alerta = document.createElement('div');
+        alerta.className = 'alert alert-danger p-3 rounded';
+        alerta.style.borderLeft = '5px solid var(--utp-rojo)';
+        const cabecera = document.createElement('div');
+        cabecera.className = 'd-flex align-items-center gap-2 mb-2';
+        const icono = document.createElement('i');
+        icono.className = 'bi bi-exclamation-triangle-fill fs-4 text-danger';
+        const titulo = document.createElement('strong');
+        titulo.className = 'fs-5';
+        titulo.textContent = 'No se pudo completar la operación';
+        cabecera.append(icono, titulo);
+        const texto = document.createElement('p');
+        texto.className = 'mb-0 small';
+        texto.textContent = mensaje;
+        alerta.append(cabecera, texto);
+        resultadoDiv.classList.remove('d-none');
         resultadoDiv.replaceChildren(alerta);
     }
 
@@ -93,7 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
             pais: document.getElementById('trPais').value,
             dispositivo: 'reconocido',
             operacionesUltimaHora: 1,
-            beneficiario: document.getElementById('trBeneficiario').value,
+            // El servidor deriva hora, frecuencia, dispositivo, IP y el tipo de
+            // beneficiario a partir del historial real del cliente.
+            beneficiarioNombre: document.getElementById('destinatarioNombre').value.trim(),
             ip: 'conocida'
         };
 
@@ -104,7 +152,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw new Error('Error en el servidor: ' + res.status);
+            if (!res.ok) {
+                let mensaje = 'No se pudo procesar la transferencia.';
+                try {
+                    const err = await res.json();
+                    if (err && err.errores && err.errores.length) mensaje = err.errores[0];
+                } catch (e) {
+                    // Respuesta sin cuerpo JSON: se conserva el mensaje genérico.
+                }
+                pintarError(mensaje);
+                return;
+            }
             const data = await res.json();
             resultadoDiv.classList.remove('d-none');
 
@@ -149,10 +207,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const tdEstado = document.createElement('td');
                 const badge = document.createElement('span');
-                badge.className = esAprobada ? 'badge bg-success py-1 px-2' : 'badge bg-danger py-1 px-2';
+                badge.className = 'badge py-1 px-2 ' + (
+                    data.nivel === 'bajo' ? 'bg-success'
+                        : data.nivel === 'medio' ? 'bg-warning text-dark'
+                            : data.nivel === 'alto' ? 'bg-danger' : 'bg-dark');
                 const iconoBadge = document.createElement('i');
-                iconoBadge.className = esAprobada ? 'bi bi-check-circle-fill' : 'bi bi-shield-exclamation';
-                badge.append(iconoBadge, document.createTextNode(esAprobada ? ' Procesada con éxito' : ' En validación preventiva'));
+                iconoBadge.className = 'bi ' + (
+                    data.nivel === 'bajo' ? 'bi-check-circle-fill'
+                        : data.nivel === 'medio' ? 'bi-eye-fill'
+                            : data.nivel === 'alto' ? 'bi-shield-exclamation' : 'bi-x-octagon-fill');
+                const textoEstado = data.nivel === 'bajo' ? ' Procesada con éxito'
+                    : data.nivel === 'medio' ? ' En monitoreo'
+                        : data.nivel === 'alto' ? ' Retenida en revisión' : ' Bloqueada';
+                badge.append(iconoBadge, document.createTextNode(textoEstado));
                 tdEstado.appendChild(badge);
 
                 const nuevaFila = document.createElement('tr');
@@ -179,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             console.error(err);
-            alert('Ocurrió un error al procesar la transferencia.');
+            pintarError('Ocurrió un error al procesar la transferencia.');
         } finally {
             btnTransferir.disabled = false;
             const iconoBoton = document.createElement('i');

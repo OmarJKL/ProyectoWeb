@@ -1,30 +1,20 @@
 package com.lambdashield.fraude.presentation.export;
 
-import com.lambdashield.fraude.application.service.EvaluacionConsultaService;
 import com.lambdashield.fraude.presentation.dto.response.EvaluacionResponse;
-import com.lambdashield.fraude.presentation.mapper.EvaluacionResponseMapper;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
 
 /** Serializa el historial de evaluaciones al formato CSV que descarga la interfaz. */
 @Component
 public class ReporteCsvExporter {
 
-    private final EvaluacionConsultaService evaluacionConsultaService;
-    private final EvaluacionResponseMapper mapper;
-
-    public ReporteCsvExporter(EvaluacionConsultaService evaluacionConsultaService,
-                              EvaluacionResponseMapper mapper) {
-        this.evaluacionConsultaService = evaluacionConsultaService;
-        this.mapper = mapper;
-    }
-
-    public byte[] exportarTransacciones() {
+    public byte[] exportar(List<EvaluacionResponse> filas) {
         StringBuilder csv = new StringBuilder(
                 "ID,Fecha,Titular,Monto (S/),Categoria,Ubicacion,Hora,Puntaje,Nivel,Estado\n");
-        for (EvaluacionResponse evaluacion : mapper.toResponses(evaluacionConsultaService.listarTodas())) {
+        for (EvaluacionResponse evaluacion : filas) {
             csv.append(campo(evaluacion.id())).append(',')
                     .append(campo(evaluacion.fecha())).append(',')
                     .append(campo(evaluacion.clienteNombre())).append(',')

@@ -18,12 +18,12 @@
                     <div class="lambda-stat-card lambda-stat-card--dark">
                         <span class="lambda-stat-label">Saldo actual</span>
                         <span class="lambda-stat-value" id="dashSaldoValor" th:text="'S/ ' + ${#numbers.formatDecimal(resumen.saldo(), 1, 'COMMA', 2, 'POINT')}">S/ 24,180.50</span>
-                        <span class="lambda-stat-delta lambda-stat-delta--up" id="dashSaldoDelta" th:text="'+' + ${resumen.variacionSaldo()} + '% este mes'">+8.4% este mes</span>
+                        <span class="lambda-stat-delta lambda-stat-delta--up" id="dashSaldoDelta" th:text="${resumen.variacionSaldo() >= 0 ? '+' + resumen.variacionSaldo() : resumen.variacionSaldo()} + '% este mes'">+8.4% este mes</span>
                     </div>
                     <div class="lambda-stat-card">
                         <span class="lambda-stat-label">Ingresos</span>
                         <span class="lambda-stat-value" id="dashIngresosValor" th:text="'S/ ' + ${#numbers.formatDecimal(resumen.ingresos(), 1, 'COMMA', 0, 'POINT')}">S/ 15,420</span>
-                        <span class="lambda-stat-delta lambda-stat-delta--up" id="dashIngresosDelta" th:text="'+' + ${resumen.variacionIngresos()} + '%'">+12.1%</span>
+                        <span class="lambda-stat-delta lambda-stat-delta--up" id="dashIngresosDelta" th:text="${resumen.variacionIngresos() >= 0 ? '+' + resumen.variacionIngresos() : resumen.variacionIngresos()} + '%'">+12.1%</span>
                     </div>
                     <div class="lambda-stat-card">
                         <span class="lambda-stat-label">Egresos</span>

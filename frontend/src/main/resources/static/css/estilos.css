@@ -183,6 +183,15 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     text-transform: uppercase;
 }
 
+.etiqueta-filtro {
+    font-family: var(--fuente-titulos);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--utp-rojo);
+}
+
 .item-factor {
     background: var(--fondo-input);
     border: 1px solid var(--borde-oscuro);

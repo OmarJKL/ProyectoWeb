@@ -49,6 +49,13 @@ public class OperacionClienteController {
                 : List.of();
         model.addAttribute("transacciones", misTx);
 
+        // Avisos de seguridad: operaciones del propio cliente con riesgo alto o crítico.
+        List<EvaluacionResponse> avisos = misTx.stream()
+                .filter(tx -> "alto".equals(tx.nivel()) || "critico".equals(tx.nivel()))
+                .limit(5)
+                .toList();
+        model.addAttribute("avisos", avisos);
+
         return "cliente/operacion";
     }
 }

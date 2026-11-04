@@ -16,6 +16,7 @@ import com.lambdashield.fraude.domain.fraud.TransaccionEvaluable;
 import com.lambdashield.fraude.application.mapper.EvaluacionResultadoMapper;
 import com.lambdashield.fraude.application.model.EvaluacionResultado;
 import com.lambdashield.fraude.application.model.FactorResultado;
+import com.lambdashield.fraude.repository.CuentaRepository;
 import com.lambdashield.fraude.repository.EvaluacionFraudeRepository;
 import com.lambdashield.fraude.repository.EvaluacionReglaRepository;
 import com.lambdashield.fraude.repository.ReglaFraudeRepository;
@@ -27,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -43,6 +45,7 @@ public class EvaluacionTransaccionService {
     private final ClienteContextService clienteContextService;
     private final TransaccionReferenciasResolver referenciasResolver;
     private final TransaccionRepository transaccionRepository;
+    private final CuentaRepository cuentaRepository;
     private final EvaluacionFraudeRepository evaluacionFraudeRepository;
     private final EvaluacionReglaRepository evaluacionReglaRepository;
     private final ReglaFraudeRepository reglaFraudeRepository;
@@ -53,6 +56,7 @@ public class EvaluacionTransaccionService {
                               ClienteContextService clienteContextService,
                               TransaccionReferenciasResolver referenciasResolver,
                               TransaccionRepository transaccionRepository,
+                              CuentaRepository cuentaRepository,
                               EvaluacionFraudeRepository evaluacionFraudeRepository,
                               EvaluacionReglaRepository evaluacionReglaRepository,
                               ReglaFraudeRepository reglaFraudeRepository,
@@ -62,6 +66,7 @@ public class EvaluacionTransaccionService {
         this.clienteContextService = clienteContextService;
         this.referenciasResolver = referenciasResolver;
         this.transaccionRepository = transaccionRepository;
+        this.cuentaRepository = cuentaRepository;
         this.evaluacionFraudeRepository = evaluacionFraudeRepository;
         this.evaluacionReglaRepository = evaluacionReglaRepository;
         this.reglaFraudeRepository = reglaFraudeRepository;
@@ -104,7 +109,8 @@ public class EvaluacionTransaccionService {
                 dispositivo,
                 (int) Math.min(Integer.MAX_VALUE, operacionesUltimaHora),
                 request.beneficiario(),
-                ip
+                ip,
+                request.beneficiarioNombre()
         );
 
         return crearYEvaluar(derivada, fechaHora, cliente, ipRemota, userAgent);
@@ -116,16 +122,35 @@ public class EvaluacionTransaccionService {
                 ? cliente.getPromedioGasto().doubleValue()
                 : 0.0;
 
+        Cuenta cuenta = clienteService.obtenerCuentaPrincipal(cliente);
+
+        // Se resuelven las referencias antes de evaluar: el tipo de beneficiario
+        // derivado del historial real debe alimentar las reglas del motor.
+        TransaccionReferenciasResolver.Referencias referencias =
+                referenciasResolver.resolver(cliente, request, userAgent);
+        String beneficiarioTipo = referencias.beneficiario().isEsConocido() ? "recurrente" : "nuevo";
+
         TransaccionEvaluable transaccionEvaluable = new TransaccionEvaluable(
                 request.monto(), request.hora(), request.pais(), request.dispositivo(),
-                request.operacionesUltimaHora(), request.beneficiario(), request.ip());
+                request.operacionesUltimaHora(), beneficiarioTipo, request.ip());
         List<FactorEvaluado> factoresEvaluados = deteccionFraudeService.evaluar(transaccionEvaluable, promedio);
         int puntaje = deteccionFraudeService.calcularPuntajeTotal(factoresEvaluados);
         String nivel = deteccionFraudeService.clasificarNivel(puntaje);
+        EstadoTransaccion estado = estadoTransaccion(nivel);
 
-        Cuenta cuenta = clienteService.obtenerCuentaPrincipal(cliente);
-        TransaccionReferenciasResolver.Referencias referencias =
-                referenciasResolver.resolver(cliente, request, userAgent);
+        // El dinero solo se mueve en operaciones aprobadas; una retención o un
+        // bloqueo no descuenta saldo. Si el saldo no alcanza, se rechaza.
+        BigDecimal monto = BigDecimal.valueOf(request.monto()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal saldoAnterior = cuenta.getSaldoDisponible();
+        BigDecimal saldoPosterior = saldoAnterior;
+        if (estado == EstadoTransaccion.APROBADA) {
+            if (monto.compareTo(saldoAnterior) > 0) {
+                throw new SaldoInsuficienteException(cuenta.getNumeroCuenta(), saldoAnterior, monto);
+            }
+            saldoPosterior = saldoAnterior.subtract(monto);
+            cuenta.setSaldoDisponible(saldoPosterior);
+            cuentaRepository.save(cuenta);
+        }
 
         OffsetDateTime fechaTransaccion = fechaHora
                 .withHour(request.hora())
@@ -140,15 +165,15 @@ public class EvaluacionTransaccionService {
                 .tipoTransaccion(referencias.tipoTransaccion())
                 .canal(referencias.canal())
                 .dispositivo(referencias.dispositivo())
-                .montoTransaccion(BigDecimal.valueOf(request.monto()).setScale(2, RoundingMode.HALF_UP))
+                .montoTransaccion(monto)
                 .codigoMoneda("PEN")
                 .fechaHoraTransaccion(fechaTransaccion)
-                .saldoAnterior(cuenta.getSaldoDisponible())
-                .saldoPosterior(cuenta.getSaldoDisponible())
+                .saldoAnterior(saldoAnterior)
+                .saldoPosterior(saldoPosterior)
                 .direccionIp(direccionIp)
                 .codigoPais(codigoPais(request.pais()))
                 .ciudad("Lima")
-                .estadoTransaccion(estadoTransaccion(nivel))
+                .estadoTransaccion(estado)
                 .fechaRegistro(OffsetDateTime.now())
                 .build();
         transaccionRepository.save(transaccion);
@@ -202,11 +227,55 @@ public class EvaluacionTransaccionService {
                 .findByIdEvaluacionAndEsActivaTrue(idEvaluacion)
                 .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
 
+        Transaccion transaccion = evaluacion.getTransaccion();
+        // Reverso del dinero: solo las operaciones aprobadas descontaron saldo.
+        if (transaccion.getEstadoTransaccion() == EstadoTransaccion.APROBADA) {
+            Cuenta cuenta = transaccion.getCuenta();
+            cuenta.setSaldoDisponible(cuenta.getSaldoDisponible().add(transaccion.getMontoTransaccion()));
+            cuentaRepository.save(cuenta);
+        }
+
         evaluacion.setEsActiva(false);
         evaluacion.setFechaDesactivacion(OffsetDateTime.now());
-        evaluacion.getTransaccion().setEstadoTransaccion(EstadoTransaccion.REVERSADA);
+        transaccion.setEstadoTransaccion(EstadoTransaccion.REVERSADA);
         evaluacionFraudeRepository.save(evaluacion);
-        transaccionRepository.save(evaluacion.getTransaccion());
+        transaccionRepository.save(transaccion);
+    }
+
+    /**
+     * Reactiva una evaluación dada de baja: vuelve a es_activa = true y la
+     * transacción recupera el estado que le corresponde según su nivel de riesgo,
+     * igual que al crearse (bajo/medio -> APROBADA, alto -> RETENIDA, crítico -> BLOQUEADA).
+     */
+    @Transactional
+    public void activarEvaluacion(Long idEvaluacion) {
+        EvaluacionFraude evaluacion = evaluacionFraudeRepository
+                .findById(idEvaluacion)
+                .orElseThrow(() -> new EvaluacionNoEncontradaException(idEvaluacion));
+        if (evaluacion.isEsActiva()) {
+            throw new IllegalArgumentException("La evaluación ya está activa: " + idEvaluacion);
+        }
+
+        String nivel = evaluacion.getNivelRiesgo().name().toLowerCase(Locale.ROOT);
+        EstadoTransaccion estado = estadoTransaccion(nivel);
+
+        Transaccion transaccion = evaluacion.getTransaccion();
+        // Si la operación vuelve a estar aprobada, el dinero se descuenta otra vez.
+        if (estado == EstadoTransaccion.APROBADA) {
+            Cuenta cuenta = transaccion.getCuenta();
+            if (transaccion.getMontoTransaccion().compareTo(cuenta.getSaldoDisponible()) > 0) {
+                throw new SaldoInsuficienteException(cuenta.getNumeroCuenta(),
+                        cuenta.getSaldoDisponible(), transaccion.getMontoTransaccion());
+            }
+            cuenta.setSaldoDisponible(cuenta.getSaldoDisponible().subtract(transaccion.getMontoTransaccion()));
+            cuentaRepository.save(cuenta);
+        }
+
+        evaluacion.setEsActiva(true);
+        evaluacion.setFechaDesactivacion(null);
+        transaccion.setEstadoTransaccion(estado);
+        evaluacionFraudeRepository.save(evaluacion);
+        transaccionRepository.save(transaccion);
     }
 
     private Cliente obtenerCliente(String codigoCliente) {

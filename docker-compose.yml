@@ -1,0 +1,37 @@
+# =========================================================
+# Lambda Shield - PostgreSQL para desarrollo
+# =========================================================
+# Levanta solo la base de datos. La aplicación se ejecuta
+# con Maven (.\mvnw.cmd spring-boot:run) y lee las mismas
+# variables de .env.
+#
+#   docker compose up -d
+#
+# El esquema canónico se aplica solo la primera vez, cuando el
+# volumen está vacío. Para reaplicarlo: docker compose down -v
+#
+# Si ya tienes PostgreSQL local en el puerto 5432, define
+# DB_PORT=5433 en .env (la aplicación usa la misma variable).
+# =========================================================
+services:
+  db:
+    image: postgres:18
+    container_name: lambda-shield-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-lambda_shield}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - lambda_shield_pgdata:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/postgresql/BD-Desarrollo web.sql:/docker-entrypoint-initdb.d/01-esquema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-lambda_shield}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  lambda_shield_pgdata:

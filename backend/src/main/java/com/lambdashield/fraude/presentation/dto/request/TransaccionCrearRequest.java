@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public record TransaccionCrearRequest(
     @NotBlank(message = "El cliente es obligatorio")
@@ -40,13 +41,17 @@ public record TransaccionCrearRequest(
     @Max(value = 1000, message = "Las operaciones de la última hora deben estar entre 0 y 1000")
     int operacionesUltimaHora,
 
-    @NotBlank(message = "El beneficiario es obligatorio")
-    @Pattern(regexp = "recurrente|nuevo",
+    // Opcional: en el portal del cliente se deriva del historial del beneficiario;
+    // el simulador del administrador puede declararlo para pruebas manuales.
+    @Pattern(regexp = "^$|recurrente|nuevo",
             message = "Beneficiario inválido (permitidos: recurrente, nuevo)")
     String beneficiario,
 
     @NotBlank(message = "La IP es obligatoria")
     @Pattern(regexp = "conocida|nueva",
             message = "IP inválida (permitidos: conocida, nueva)")
-    String ip
+    String ip,
+
+    @Size(max = 150, message = "El nombre del beneficiario admite hasta 150 caracteres")
+    String beneficiarioNombre
 ) {}

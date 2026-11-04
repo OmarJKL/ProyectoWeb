@@ -155,6 +155,13 @@ class ValidacionApiMockMvcTest {
     }
 
     @Test
+    void idNoPositivoEnReactivarDevuelve400() throws Exception {
+        mockMvc.perform(patch("/api/v1/evaluation/{id}/activar", "0").session(admin()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errores[0]").value(ID_POSITIVO));
+    }
+
+    @Test
     void diasNoNumericosDevuelven400() throws Exception {
         mockMvc.perform(get("/api/v1/metric/movement?days=mes").session(admin()))
                 .andExpect(status().isBadRequest())

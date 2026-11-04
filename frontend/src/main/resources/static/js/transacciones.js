@@ -12,150 +12,106 @@
     const btnAplicarFecha = document.getElementById('btnAplicarFecha');
     const btnLimpiarFecha = document.getElementById('btnLimpiarFecha');
 
+    const rol = document.body.dataset.rol || '';
+    const esAdmin = rol === 'ADMIN';
+
+    let transacciones = [];
     let filtroActivo = 'todas';
     let filtroMonto = null;
     let filtroFecha = null;
-
-    const nombres = [
-        'María Fernández Rojas',
-        'Jorge Salas Mendoza',
-        'Ana Torres Vega',
-        'Carlos Quispe Luján',
-        'Lucía Paredes Silva',
-        'Renato Vargas Nole',
-        'Sofía Díaz García',
-        'Miguel Rojas Torres',
-        'Patricia Cárdenas Huamán',
-        'Daniel Flores Ayala'
-    ];
-
-    const categorias = ['electronica', 'restaurante', 'servicios', 'retail', 'electronica'];
-    const ubicaciones = ['local', 'local', 'local', 'local', 'alto_riesgo'];
 
     function getNivelLabel(nivel) {
         return nivel === 'bajo' ? 'Bajo' : nivel === 'medio' ? 'Medio' : nivel === 'alto' ? 'Alto' : 'Crítico';
     }
 
-    function getColorByNivel(nivel) {
-        if (nivel === 'bajo') return 'var(--riesgo-bajo)';
-        if (nivel === 'medio') return 'var(--riesgo-medio)';
-        if (nivel === 'alto') return 'var(--riesgo-alto)';
-        return 'var(--riesgo-critico)';
+    function escapeHtml(texto) {
+        const span = document.createElement('span');
+        span.textContent = texto == null ? '' : String(texto);
+        return span.innerHTML;
     }
 
-    function getIconByNivel(nivel) {
-        if (nivel === 'bajo') return 'bi-check-circle-fill';
-        if (nivel === 'medio') return 'bi-eye-fill';
-        if (nivel === 'alto') return 'bi-flag-fill';
-        return 'bi-x-octagon-fill';
+    function fechaDe(tx) {
+        return tx.fechaHora ? new Date(tx.fechaHora) : null;
     }
 
-    function generarDatosDemo() {
-        const registros = [];
-        const meses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-
-        for (let i = 0; i < 100; i++) {
-            const mes = meses[i % meses.length];
-            const anio = 2025 + Math.floor(i / 12) % 2;
-            const dia = (i % 28) + 1;
-            const hora = (i * 7) % 24;
-            const minuto = (i * 13) % 60;
-            const monto = 80 + ((i * 37) % 900);
-            const puntaje = 12 + ((i * 13) % 88);
-
-            let nivel = 'bajo';
-            if (puntaje >= 80) nivel = 'critico';
-            else if (puntaje >= 60) nivel = 'alto';
-            else if (puntaje >= 35) nivel = 'medio';
-
-            const fecha = new Date(anio, mes - 1, dia, hora, minuto);
-            const nombre = nombres[i % nombres.length];
-            const categoria = categorias[i % categorias.length];
-            const ubicacion = ubicaciones[i % ubicaciones.length];
-            const estado = nivel === 'bajo' ? 'Aprobada' : nivel === 'medio' ? 'Monitoreo' : nivel === 'alto' ? 'Retener' : 'Bloqueada';
-
-            registros.push({
-                id: 'TR-' + String(i + 1).padStart(5, '0'),
-                clienteNombre: nombre,
-                codigoCliente: 'CLI-' + String((i % 10) + 1).padStart(3, '0'),
-                monto: Number(monto.toFixed(2)),
-                categoria,
-                pais: ubicacion,
-                hora,
-                puntaje,
-                nivel,
-                estado,
-                fechaHora: fecha,
-                fechaTexto: fecha.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-                colorNivel: getColorByNivel(nivel),
-                iconoEstado: getIconByNivel(nivel),
-                factores: [
-                    { etiqueta: 'Monto inusual', puntaje: 18, max: 25, motivo: 'Se detectó un monto inusual respecto al perfil del cliente.' },
-                    { etiqueta: 'Ubicación', puntaje: 14, max: 20, motivo: 'La operación presenta una ubicación no habitual para este cliente.' },
-                    { etiqueta: 'Horario', puntaje: 10, max: 15, motivo: 'La operación se realizó en un horario fuera del patrón habitual.' }
-                ],
-                saldo: 2500 + (i * 180),
-                numeroTarjeta: '•••• 4821'
-            });
-        }
-
-        return registros;
+    async function cargar() {
+        const [resTx, resKpi] = await Promise.all([
+            LSApi.fetch('/api/v1/evaluation?activas=false'),
+            LSApi.fetch('/api/v1/metric')
+        ]);
+        transacciones = await resTx.json();
+        pintarKpis(await resKpi.json());
+        renderizarLista();
     }
 
-    const transacciones = generarDatosDemo();
+    function pintarKpis(kpis) {
+        document.getElementById('kpiTotal').textContent = kpis.total;
+        document.getElementById('kpiPuntaje').textContent = Number(kpis.puntajePromedio).toFixed(1);
+        document.getElementById('kpiAprobadas').textContent = kpis.aprobadas;
+        document.getElementById('kpiRevision').textContent = kpis.monitoreadas + kpis.enRevision;
+        document.getElementById('kpiCritico').textContent = kpis.bloqueadas;
+    }
 
-    function coincidirNivel(nivel) {
-        return filtroActivo === 'todas' || filtroActivo === nivel;
+    function coincidirVista(tx) {
+        if (filtroActivo === 'desactivadas') return !tx.activa;
+        return tx.activa && (filtroActivo === 'todas' || filtroActivo === tx.nivel);
     }
 
     function cumplirMonto(tx) {
         if (filtroMonto === null) return true;
         const valor = Number(filtroMonto.valor);
         if (Number.isNaN(valor)) return true;
-        const actual = Number(tx.monto);
-        if (filtroMonto.comparador === 'mayor') return actual > valor;
-        if (filtroMonto.comparador === 'menor') return actual < valor;
-        return true;
+        return filtroMonto.comparador === 'mayor' ? tx.monto > valor : tx.monto < valor;
     }
 
     function cumplirFecha(tx) {
         if (!filtroFecha) return true;
-        const fecha = tx.fechaHora;
-        const mes = fecha.getMonth() + 1;
-        const anio = fecha.getFullYear();
-
-        if (filtroFecha.mes && filtroFecha.mes !== '') {
-            if (Number(mes) !== Number(filtroFecha.mes)) return false;
-        }
-
-        if (filtroFecha.anio && filtroFecha.anio !== '') {
-            if (Number(anio) !== Number(filtroFecha.anio)) return false;
-        }
-
+        const fecha = fechaDe(tx);
+        if (!fecha) return true;
+        if (filtroFecha.mes && (fecha.getMonth() + 1) !== Number(filtroFecha.mes)) return false;
+        if (filtroFecha.anio && fecha.getFullYear() !== Number(filtroFecha.anio)) return false;
         return true;
     }
 
     function renderizarLista() {
         if (!tabla) return;
 
-        const filtradas = transacciones.filter(tx => {
-            return coincidirNivel(tx.nivel) && cumplirMonto(tx) && cumplirFecha(tx);
-        });
+        const filtradas = transacciones.filter(tx =>
+            coincidirVista(tx) && cumplirMonto(tx) && cumplirFecha(tx));
 
         tabla.innerHTML = '';
 
         filtradas.forEach(tx => {
             const tr = document.createElement('tr');
-            tr.dataset.nivel = tx.nivel;
-            tr.dataset.monto = String(tx.monto);
-            tr.dataset.fecha = tx.fechaTexto;
+            if (!tx.activa) {
+                tr.style.opacity = '0.5';
+                tr.style.filter = 'grayscale(0.6)';
+            }
+
+            const estadoHtml = tx.activa
+                ? `<span style="color:${tx.colorNivel}; font-size:0.8rem; font-weight:600;">
+                       <i class="bi ${tx.iconoEstado}"></i> ${escapeHtml(tx.estado)}
+                   </span>`
+                : `<span class="text-secondary" style="font-size:0.8rem; font-weight:600;">
+                       <i class="bi bi-eye-slash"></i> Desactivada
+                   </span>`;
+
+            const accionHtml = esAdmin
+                ? (tx.activa
+                    ? `<button type="button" class="btn btn-sm btn-secundario btn-accion-desactivar">
+                           <i class="bi bi-eye-slash"></i> Desactivar
+                       </button>`
+                    : `<button type="button" class="btn btn-sm btn-success btn-accion-reactivar">
+                           <i class="bi bi-arrow-counterclockwise"></i> Reactivar
+                       </button>`)
+                : '';
 
             tr.innerHTML = `
-                <td class="dato-mono fw-bold">${tx.id}</td>
-                <td>${tx.clienteNombre}</td>
+                <td class="dato-mono fw-bold">${escapeHtml(tx.id)}</td>
+                <td>${escapeHtml(tx.clienteNombre)}</td>
                 <td class="dato-mono">S/ ${Number(tx.monto).toFixed(2)}</td>
-                <td>${tx.categoria}</td>
-                <td>${tx.pais}</td>
+                <td>${escapeHtml(tx.categoria)}</td>
+                <td>${escapeHtml(tx.pais)}</td>
                 <td class="dato-mono">${String(tx.hora).padStart(2, '0')}:00</td>
                 <td class="dato-mono fw-bold" style="color:${tx.colorNivel};">${tx.puntaje}</td>
                 <td>
@@ -163,13 +119,8 @@
                         ${getNivelLabel(tx.nivel)}
                     </span>
                 </td>
-                <td>
-                    <span style="color:${tx.colorNivel}; font-size:0.8rem; font-weight:600;">
-                        <i class="bi ${tx.iconoEstado}"></i>
-                        <span>${tx.estado}</span>
-                    </span>
-                </td>
-                <td class="dato-mono">${tx.fechaTexto}</td>
+                <td>${estadoHtml}</td>
+                <td class="dato-mono">${escapeHtml(tx.fecha)}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-danger btn-detalle-transaccion">
                         <i class="bi bi-file-earmark-text"></i> Ver detalles
@@ -180,28 +131,78 @@
                         <i class="bi bi-clock-history"></i> Ver historial
                     </button>
                 </td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-secundario btn-soft-delete">
-                        <i class="bi bi-eye-slash"></i> Desactivar
-                    </button>
-                </td>
+                ${esAdmin ? `<td>${accionHtml}</td>` : ''}
             `;
 
-            const detalleBtn = tr.querySelector('.btn-detalle-transaccion');
-            detalleBtn.addEventListener('click', () => abrirDetalle(tx));
+            tr.querySelector('.btn-detalle-transaccion').addEventListener('click', () => abrirDetalle(tx));
+            tr.querySelector('.btn-ver-historial').addEventListener('click', () => abrirHistorial(tx));
 
-            const historialBtn = tr.querySelector('.btn-ver-historial');
-            historialBtn.addEventListener('click', () => abrirHistorial(tx.clienteNombre));
-
-            const desactivarBtn = tr.querySelector('.btn-soft-delete');
-            desactivarBtn.addEventListener('click', () => {
-                tr.style.opacity = '0.45';
-                tr.style.filter = 'grayscale(0.7)';
-                alert('Transacción marcada como desactivada.');
-            });
+            const btnDesactivar = tr.querySelector('.btn-accion-desactivar');
+            if (btnDesactivar) {
+                btnDesactivar.addEventListener('click', () => confirmarDesactivar(tx));
+            }
+            const btnReactivar = tr.querySelector('.btn-accion-reactivar');
+            if (btnReactivar) {
+                btnReactivar.addEventListener('click', () => confirmarReactivar(tx));
+            }
 
             tabla.appendChild(tr);
         });
+    }
+
+    const confirmarModal = () => document.getElementById('confirmarAccionModal');
+
+    function pedirConfirmacion(titulo, mensaje, accion) {
+        const modal = confirmarModal();
+        document.getElementById('confirmarTitulo').textContent = titulo;
+        document.getElementById('confirmarMensaje').textContent = mensaje;
+        const btnAceptar = document.getElementById('confirmarAceptar');
+
+        // Se clona para quitar oyentes previos; hay que habilitarlo de nuevo,
+        // porque cloneNode copia el estado disabled del botón anterior.
+        const nuevo = btnAceptar.cloneNode(true);
+        btnAceptar.replaceWith(nuevo);
+        nuevo.disabled = false;
+        nuevo.addEventListener('click', async () => {
+            nuevo.disabled = true;
+            try {
+                await accion();
+                bootstrap.Modal.getOrCreateInstance(modal).hide();
+                await cargar();
+            } catch (e) {
+                nuevo.disabled = false;
+            }
+        });
+
+        bootstrap.Modal.getOrCreateInstance(modal).show();
+    }
+
+    function confirmarDesactivar(tx) {
+        pedirConfirmacion(
+            'Desactivar operación',
+            `La operación ${tx.id} de ${tx.clienteNombre} se marcará como inactiva (es_activa = false) y su transacción pasará a REVERSADA.`,
+            async () => {
+                const res = await LSApi.fetch(`/api/v1/evaluation/${tx.idInterno}`, { method: 'PATCH' });
+                if (!res.ok && res.status !== 204) {
+                    LSApi.mostrarAviso('No se pudo desactivar la operación.');
+                    throw new Error('desactivar');
+                }
+                LSApi.mostrarAviso(`Operación ${tx.id} desactivada.`);
+            });
+    }
+
+    function confirmarReactivar(tx) {
+        pedirConfirmacion(
+            'Reactivar operación',
+            `La operación ${tx.id} de ${tx.clienteNombre} volverá a estar activa y su transacción recuperará su estado según el nivel de riesgo.`,
+            async () => {
+                const res = await LSApi.fetch(`/api/v1/evaluation/${tx.idInterno}/activar`, { method: 'PATCH' });
+                if (!res.ok && res.status !== 204) {
+                    LSApi.mostrarAviso('No se pudo reactivar la operación.');
+                    throw new Error('reactivar');
+                }
+                LSApi.mostrarAviso(`Operación ${tx.id} reactivada.`);
+            });
     }
 
     function abrirDetalle(tx) {
@@ -209,13 +210,15 @@
         if (!modal) return;
 
         document.getElementById('detalleCliente').textContent = tx.clienteNombre;
-        document.getElementById('detalleFecha').textContent = tx.fechaTexto;
+        document.getElementById('detalleFecha').textContent = tx.fecha;
         document.getElementById('detalleMonto').textContent = 'S/ ' + Number(tx.monto).toFixed(2);
         document.getElementById('detallePuntaje').textContent = tx.puntaje;
         document.getElementById('detalleNivel').textContent = getNivelLabel(tx.nivel);
 
         const detalleEstado = document.getElementById('detalleEstado');
-        if (tx.nivel === 'bajo') {
+        if (!tx.activa) {
+            detalleEstado.textContent = 'Desactivada: la evaluación fue dada de baja (es_activa = false).';
+        } else if (tx.nivel === 'bajo') {
             detalleEstado.textContent = 'Aprobada: no presenta riesgo significativo.';
         } else if (tx.nivel === 'medio') {
             detalleEstado.textContent = 'Monitoreo: requiere revisión por comportamiento atípico.';
@@ -227,28 +230,27 @@
 
         const lista = document.getElementById('detalleListaFactores');
         lista.innerHTML = '';
-
-        tx.factores.forEach(factor => {
+        (tx.factores || []).forEach(factor => {
             const li = document.createElement('li');
-            li.innerHTML = `<strong>${factor.etiqueta}</strong>: ${factor.puntaje} / ${factor.max} — ${factor.motivo}`;
+            li.innerHTML = `<strong>${escapeHtml(factor.etiqueta)}</strong>: ${factor.puntaje} / ${factor.max} — ${escapeHtml(factor.motivo)}`;
             lista.appendChild(li);
         });
 
-        const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
-        modalInstance.show();
+        bootstrap.Modal.getOrCreateInstance(modal).show();
     }
 
-    function abrirHistorial(cliente) {
+    function abrirHistorial(txBase) {
         const modal = document.getElementById('historialClienteModal');
         if (!modal) return;
 
-        const clienteTx = transacciones.filter(tx => tx.clienteNombre === cliente);
-        const total = clienteTx.reduce((sum, tx) => sum + tx.monto, 0);
+        const clienteTx = transacciones.filter(t => t.clienteCodigo === txBase.clienteCodigo);
+        const total = clienteTx.reduce((sum, t) => sum + t.monto, 0);
 
-        document.getElementById('historialClienteTitulo').textContent = 'Historial de ' + cliente;
-        document.getElementById('historialClienteSubtitulo').textContent = clienteTx.length + ' transacciones registradas';
+        document.getElementById('historialClienteTitulo').textContent = 'Historial de ' + txBase.clienteNombre;
+        document.getElementById('historialClienteSubtitulo').textContent =
+            clienteTx.length + ' evaluaciones registradas';
         document.getElementById('clienteSaldo').textContent = 'S/ ' + total.toFixed(2);
-        document.getElementById('clienteNombreTarjeta').textContent = cliente;
+        document.getElementById('clienteNombreTarjeta').textContent = txBase.clienteNombre;
 
         const tbodyHistorial = document.getElementById('tablaHistorialCliente');
         tbodyHistorial.innerHTML = '';
@@ -256,18 +258,17 @@
         clienteTx.forEach(tx => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${tx.id}</td>
-                <td>${tx.fechaTexto}</td>
+                <td>${escapeHtml(tx.id)}</td>
+                <td>${escapeHtml(tx.fecha)}</td>
                 <td>S/ ${Number(tx.monto).toFixed(2)}</td>
-                <td>${tx.categoria}</td>
+                <td>${escapeHtml(tx.categoria)}</td>
                 <td>${getNivelLabel(tx.nivel)}</td>
-                <td>${tx.estado}</td>
+                <td>${tx.activa ? escapeHtml(tx.estado) : 'Desactivada'}</td>
             `;
             tbodyHistorial.appendChild(row);
         });
 
-        const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
-        modalInstance.show();
+        bootstrap.Modal.getOrCreateInstance(modal).show();
     }
 
     btnFiltroList.forEach(btn => {
@@ -285,10 +286,7 @@
 
     btnAplicarMonto.addEventListener('click', () => {
         const valor = inputMonto.value;
-        filtroMonto = valor === '' ? null : {
-            valor: Number(valor),
-            comparador: selectMonto.value
-        };
+        filtroMonto = valor === '' ? null : { valor: Number(valor), comparador: selectMonto.value };
         renderizarLista();
     });
 
@@ -299,10 +297,7 @@
     });
 
     btnAplicarFecha.addEventListener('click', () => {
-        filtroFecha = {
-            mes: mesFiltro.value,
-            anio: anioFiltro.value
-        };
+        filtroFecha = { mes: mesFiltro.value, anio: anioFiltro.value };
         renderizarLista();
     });
 
@@ -313,5 +308,7 @@
         renderizarLista();
     });
 
-    renderizarLista();
+    cargar().catch(() => {
+        LSApi.mostrarAviso('No se pudo cargar el historial de operaciones.');
+    });
 })();

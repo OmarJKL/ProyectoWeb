@@ -98,11 +98,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const elEgresosDelta = document.getElementById('dashEgresosDelta');
 
             if (elSaldo) elSaldo.textContent = 'S/ ' + data.saldo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            if (elSaldoDelta) elSaldoDelta.textContent = '+' + data.variacionSaldo + '% este periodo';
+            if (elSaldoDelta) elSaldoDelta.textContent = (data.variacionSaldo >= 0 ? '+' : '') + data.variacionSaldo + '% este periodo';
             if (elIngresos) elIngresos.textContent = 'S/ ' + Math.round(data.ingresos).toLocaleString('en-US');
-            if (elIngresosDelta) elIngresosDelta.textContent = '+' + data.variacionIngresos + '%';
+            if (elIngresosDelta) elIngresosDelta.textContent = (data.variacionIngresos >= 0 ? '+' : '') + data.variacionIngresos + '%';
             if (elEgresos) elEgresos.textContent = 'S/ ' + Math.round(data.egresos).toLocaleString('en-US');
-            if (elEgresosDelta) elEgresosDelta.textContent = data.variacionEgresos + '%';
+            if (elEgresosDelta) elEgresosDelta.textContent = (data.variacionEgresos >= 0 ? '+' : '') + data.variacionEgresos + '%';
         } catch (err) {
             console.error("Error al actualizar resumen:", err);
         }

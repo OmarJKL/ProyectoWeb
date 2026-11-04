@@ -2,6 +2,8 @@ package com.lambdashield.fraude.presentation.exception;
 
 import com.lambdashield.fraude.application.service.ClienteNoEncontradoException;
 import com.lambdashield.fraude.application.service.EvaluacionNoEncontradaException;
+import com.lambdashield.fraude.application.service.SaldoInsuficienteException;
+import com.lambdashield.fraude.application.service.UsuarioNoEncontradoException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -58,6 +60,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EvaluacionNoEncontradaException.class)
     public ResponseEntity<Map<String, List<String>>> handleEvaluacionNoEncontrada(EvaluacionNoEncontradaException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("errores", List.of(mensajeSeguro(ex))));
+    }
+
+    @ExceptionHandler(UsuarioNoEncontradoException.class)
+    public ResponseEntity<Map<String, List<String>>> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("errores", List.of(mensajeSeguro(ex))));
+    }
+
+    @ExceptionHandler(SaldoInsuficienteException.class)
+    public ResponseEntity<Map<String, List<String>>> handleSaldoInsuficiente(SaldoInsuficienteException ex) {
+        return ResponseEntity.badRequest()
                 .body(Map.of("errores", List.of(mensajeSeguro(ex))));
     }
 

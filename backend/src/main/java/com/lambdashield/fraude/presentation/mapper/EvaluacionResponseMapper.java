@@ -35,7 +35,8 @@ public class EvaluacionResponseMapper {
                 resultado.fechaEvaluacion().format(FORMATO_FECHA),
                 resultado.fechaEvaluacion(),
                 resultado.factores().stream().map(this::toFactor).toList(),
-                resultado.idInterno()
+                resultado.idInterno(),
+                resultado.activa()
         );
     }
 

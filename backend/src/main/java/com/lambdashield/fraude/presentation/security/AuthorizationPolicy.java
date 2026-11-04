@@ -16,7 +16,16 @@ public class AuthorizationPolicy {
     /** Devuelve el mensaje de rechazo para una API, o vacío cuando el rol puede continuar. */
     public Optional<String> rechazoApi(String rol, String metodo, String ruta) {
         if (HttpMethod.DELETE.matches(metodo)) {
+            // Solo la gestión de usuarios permite baja física; las evaluaciones
+            // usan PATCH (baja lógica) y el resto de rutas rechazan DELETE.
+            if (ADMIN.equals(rol) && ruta.startsWith("/api/v1/user")) {
+                return Optional.empty();
+            }
             return Optional.of("DELETE no permitido; use PATCH para desactivar");
+        }
+        // La gestión de usuarios es exclusiva de ADMIN, incluida la consulta.
+        if (!ADMIN.equals(rol) && ruta.startsWith("/api/v1/user")) {
+            return Optional.of("No autorizado");
         }
         if (ADMIN.equals(rol)) return Optional.empty();
         if (ANALISTA.equals(rol) && HttpMethod.GET.matches(metodo)) return Optional.empty();
@@ -33,7 +42,7 @@ public class AuthorizationPolicy {
         if (ADMIN.equals(rol)) return Optional.empty();
 
         if (ANALISTA.equals(rol)) {
-            return esPaginaCliente(ruta) || esPaginaSimulador(ruta)
+            return esPaginaCliente(ruta) || esPaginaSimulador(ruta) || esPaginaUsuarios(ruta)
                     ? Optional.of("/")
                     : Optional.empty();
         }
@@ -50,5 +59,9 @@ public class AuthorizationPolicy {
 
     private static boolean esPaginaSimulador(String ruta) {
         return ruta.equals("/simulador") || ruta.startsWith("/simulador/");
+    }
+
+    private static boolean esPaginaUsuarios(String ruta) {
+        return ruta.equals("/usuarios") || ruta.startsWith("/usuarios/");
     }
 }

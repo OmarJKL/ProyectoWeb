@@ -58,10 +58,11 @@ public class EvaluationApiController {
         return ResponseEntity.ok(mapper.toResponse(evaluacionTransaccionService.crearYEvaluar(toCommand(request))));
     }
 
-    /** Devuelve el historial de evaluaciones activas. */
+    /** Devuelve el historial de evaluaciones activas. Con ?activas=false incluye también las desactivadas. */
     @GetMapping
-    public ResponseEntity<List<EvaluacionResponse>> list() {
-        return ResponseEntity.ok(mapper.toResponses(evaluacionConsultaService.listarTodas()));
+    public ResponseEntity<List<EvaluacionResponse>> list(
+            @RequestParam(defaultValue = "true") boolean activas) {
+        return ResponseEntity.ok(mapper.toResponses(evaluacionConsultaService.listar(activas)));
     }
 
     /**
@@ -74,9 +75,20 @@ public class EvaluationApiController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Reactivación de una evaluación dada de baja: vuelve a es_activa = true y
+     * restaura el estado de la transacción según su nivel de riesgo.
+     */
+    @PatchMapping("/{id}/activar")
+    public ResponseEntity<Void> activar(@PathVariable @Positive(message = "El identificador debe ser positivo") Long id) {
+        evaluacionTransaccionService.activarEvaluacion(id);
+        return ResponseEntity.noContent().build();
+    }
+
     private static EvaluarTransaccionCommand toCommand(TransaccionCrearRequest request) {
         return new EvaluarTransaccionCommand(
                 request.cliente(), request.monto(), request.categoria(), request.hora(), request.pais(),
-                request.dispositivo(), request.operacionesUltimaHora(), request.beneficiario(), request.ip());
+                request.dispositivo(), request.operacionesUltimaHora(), request.beneficiario(), request.ip(),
+                request.beneficiarioNombre());
     }
 }
