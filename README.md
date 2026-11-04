@@ -380,6 +380,7 @@ docker compose up -d
 ## Documentación del proyecto
 
 - `README.md` — este documento: arquitectura, API, páginas, esquema y pruebas.
+- `docs/` — documentación técnica detallada (arquitectura, funcionalidades, reglas, consultas JPA, valor de negocio).
 - `CUMPLIMIENTO_TAREAS.md` — informe de cumplimiento por tarea (seguridad, sesión, roles, aislamiento, persistencia y baja lógica).
 - `Instrucciones.MD` — consigna original del trabajo.
 
